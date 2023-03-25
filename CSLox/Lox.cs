@@ -1,6 +1,6 @@
 ﻿namespace CSLox
 {
-    public class Lox
+	public class Lox
 	{
 		public static bool hadError = false;
 		
@@ -42,14 +42,15 @@
 		
 		private static void Run(string source)
 		{
-			List<string> tokens = source.Split(' ').ToList();
+			Scanner scanner = new Scanner(source);
+			List<Token> tokens = scanner.ScanTokens();
 			foreach(var token in tokens)
 			{
 				Console.WriteLine(token);
 			}
 		}
 		
-		private static void Error(int line, string message)
+		public static void Error(int line, string message)
 		{
 			Report(line, "", message);
 		}
