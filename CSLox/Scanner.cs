@@ -141,7 +141,7 @@ namespace CSLox
 			AddToken(type, null);
 		}
 		
-		private void AddToken(TokenType type, object? literal)
+		private void AddToken(TokenType type, object literal)
 		{
 			int length = current - start;
 			string text = source.Substring(start, length);

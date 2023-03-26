@@ -14,7 +14,7 @@ namespace CSLox
 			this.tokens = tokens;
 		}
 		
-		internal Expression? Parse()
+		internal Expression Parse()
 		{
 			try
 			{

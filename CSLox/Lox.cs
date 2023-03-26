@@ -36,7 +36,7 @@ namespace CSLox
 			for(;;)
 			{
 				Console.Write("$> ");
-				string? line = Console.ReadLine();
+				string line = Console.ReadLine();
 				if(line == null) break;
 				Run(line);
 				hadError = false;
@@ -48,7 +48,7 @@ namespace CSLox
 			Scanner scanner = new Scanner(source);
 			List<Token> tokens = scanner.ScanTokens();
 			Parser parser = new Parser(tokens);
-			Expression? expr = parser.Parse();
+			Expression expr = parser.Parse();
 			//stop on syntax error
 			if(hadError) return;
 			

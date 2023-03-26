@@ -49,9 +49,9 @@ namespace CSLox.Expressions
 
 	internal class Literal : Expression
 	{
-		internal readonly object? value;
+		internal readonly object value;
 
-		internal Literal(object? value)
+		internal Literal(object value)
 		{
 			this.value = value;
 		}

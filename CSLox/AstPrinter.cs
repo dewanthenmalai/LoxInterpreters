@@ -5,7 +5,7 @@ namespace CSLox
 {
 	internal class AstPrinter : ExpressionVisitor<string>
 	{
-		internal string? Print(Expression? expr)
+		internal string Print(Expression expr)
 		{
 			return expr?.Accept(this);
 		}
