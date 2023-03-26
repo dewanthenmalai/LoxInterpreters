@@ -7,7 +7,7 @@ namespace CSLox
 	{
 		private readonly List<Token> tokens;
 		private int current = 0;
-		private bool isAtEnd => Peek().Type == EOF;
+		private bool isAtEnd => Peek().type == EOF;
 		
 		internal Parser(List<Token> tokens)
 		{
@@ -19,7 +19,7 @@ namespace CSLox
 			List<Stmt> statements = new List<Stmt>();
 			while(!isAtEnd)
 			{
-				statements.Add(Statement());
+				statements.Add(Declaration());
 			}
 			return statements;
 		}
@@ -37,6 +37,20 @@ namespace CSLox
 			return expr;
 		}
 		
+		private Stmt Declaration()
+		{
+			try
+			{
+				if(Match(VAR)) return VarDeclaration();
+				return Statement();
+			}
+			catch(ParseExecption)
+			{
+				Synchronize();
+				return null;
+			}
+		}
+		
 		private Stmt Statement()
 		{
 			if(Match(PRINT)) return PrintStatment();
@@ -48,6 +62,18 @@ namespace CSLox
 			Expr value = Expression();
 			Consume(SEMICOLON, "Expected ';' after print.");
 			return new Print(value);
+		}
+		
+		private Stmt VarDeclaration()
+		{
+			Token name = Consume(IDENTIFIER, "Expected variable name.");
+			Expr initializer = null;
+			if(Match(EQUAL))
+			{
+				initializer = Expression();
+			}
+			Consume(SEMICOLON, "Expected ';' after variable declaration");
+			return new Var(name, initializer);
 		}
 		
 		private Stmt ExpressionStatment()
@@ -131,7 +157,8 @@ namespace CSLox
 			if(Match(FALSE)) return new Literal(false);
 			if(Match(TRUE)) return new Literal(true);
 			if(Match(NIL)) return new Literal(null);
-			if(Match(NUMBER, STRING)) return new Literal(Previous().Literal);
+			if(Match(NUMBER, STRING)) return new Literal(Previous().literal);
+			if(Match(IDENTIFIER)) return new Variable(Previous());
 			if(Match(LEFT_PAREN))
 			{
 				Expr expr = Expression();
@@ -164,7 +191,7 @@ namespace CSLox
 		private bool Check(TokenType type)
 		{
 			if(isAtEnd) return false;
-			return Peek().Type == type;
+			return Peek().type == type;
 		}
 		
 		private Token Advance()
@@ -189,9 +216,9 @@ namespace CSLox
 			
 			while(!isAtEnd)
 			{
-				if(Previous().Type == SEMICOLON) return;
+				if(Previous().type == SEMICOLON) return;
 				
-				switch(Peek().Type)
+				switch(Peek().type)
 				{
 					case CLASS:
 					case FUN:

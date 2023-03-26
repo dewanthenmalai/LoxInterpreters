@@ -5,13 +5,9 @@ namespace CSLox
 {
 	internal class AstPrinter : ExprVisitor<string>
 	{
-		internal string Print(Expr expr)
-		{
-			return expr?.Accept(this);
-		}
 		public string Visit(Binary expression)
 		{
-			return Parenthesize(expression._operator.Lexeme, expression.left, expression.right);
+			return Parenthesize(expression._operator.lexeme, expression.left, expression.right);
 		}
 
 		public string Visit(Grouping expression)
@@ -27,7 +23,12 @@ namespace CSLox
 
 		public string Visit(Unary expression)
 		{
-			return Parenthesize(expression._operator.Lexeme, expression.right);
+			return Parenthesize(expression._operator.lexeme, expression.right);
+		}
+		
+		public string Visit(Variable expr)
+		{
+			return Parenthesize(expr.name.lexeme);
 		}
 		
 		private string Parenthesize(string name, params Expr[] expressions)

@@ -14,7 +14,7 @@ namespace CSLox
 			if(args.Length > 1)
 			{
 				Console.WriteLine("Usage: cslox [script]");
-				Environment.Exit(64);
+				System.Environment.Exit(64);
 			}
 			else if(args.Length == 1)
 			{
@@ -30,8 +30,8 @@ namespace CSLox
 		{
 			byte[] bytes = File.ReadAllBytes(Path.GetFullPath(file));
 			Run(System.Text.Encoding.Default.GetString(bytes));
-			if(hadError) Environment.Exit(65);
-			if(hadRuntimeError) Environment.Exit(70);
+			if(hadError) System.Environment.Exit(65);
+			if(hadRuntimeError) System.Environment.Exit(70);
 		}
 		
 		private static void RunPrompt()
@@ -65,19 +65,19 @@ namespace CSLox
 		
 		internal static void Error(Token token, string message)
 		{
-			if(token.Type == TokenType.EOF)
+			if(token.type == TokenType.EOF)
 			{
-				Report(token.Line, " at end", message);
+				Report(token.line, " at end", message);
 			}
 			else
 			{
-				Report(token.Line, $" at '{token.Lexeme}'", message);
+				Report(token.line, $" at '{token.lexeme}'", message);
 			}
 		}
 		
 		internal static void RuntimeError(LoxRuntimeException lrex)
 		{
-			Console.Error.WriteLine($"{lrex.Message}\n[line {lrex.Token.Line}]");
+			Console.Error.WriteLine($"{lrex.Message}\n[line {lrex.Token.line}]");
 			hadRuntimeError = true;
 		}
 		

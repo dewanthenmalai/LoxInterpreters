@@ -5,6 +5,7 @@ namespace CSLox
 {
 	internal class Interpreter : ExprVisitor<object>, StmtVisitor<object>
 	{
+		private Environment environment = new Environment();
 		public void Interpret(List<Stmt> statements)
 		{
 			try
@@ -24,7 +25,7 @@ namespace CSLox
 			object left = Evaluate(expression.left);
 			object right = Evaluate(expression.right);
 			
-			switch(expression._operator.Type)
+			switch(expression._operator.type)
 			{
 				case BANG_EQUAL: return !IsEqual(left, right);
 				case EQUAL_EQUAL: return IsEqual(left, right);
@@ -64,7 +65,7 @@ namespace CSLox
 		{
 			object right = Evaluate(expression.right);
 			
-			switch(expression._operator.Type)
+			switch(expression._operator.type)
 			{
 				case BANG:
 					return !IsTruthy(right);
@@ -73,6 +74,22 @@ namespace CSLox
 					return -(double)right;
 			}
 			
+			return null;
+		}
+		public object Visit(Variable expr) => environment.Get(expr.name);
+		
+		public object Visit(Print stmt)
+		{
+			object value = Evaluate(stmt.expression);
+			Console.WriteLine(Stringify(value));
+			return null;
+		}
+		
+		public object Visit(Var stmt)
+		{
+			object value = null;
+			if(stmt.initializer != null) value = Evaluate(stmt.initializer);
+			environment.Define(stmt.name.lexeme, value);
 			return null;
 		}
 		
@@ -93,7 +110,7 @@ namespace CSLox
 		
 		private void CheckDivideByZero(Token _operator, double value)
 		{
-			if(_operator.Type == SLASH && value == 0) throw new LoxRuntimeException(_operator, "Cannot divide by zero.");
+			if(_operator.type == SLASH && value == 0) throw new LoxRuntimeException(_operator, "Cannot divide by zero.");
 		}
 		
 		private bool IsTruthy(object obj)
@@ -137,13 +154,6 @@ namespace CSLox
 		public object Visit(Expression stmt)
 		{
 			Evaluate(stmt.expression);
-			return null;
-		}
-
-		public object Visit(Print stmt)
-		{
-			object value = Evaluate(stmt.expression);
-			Console.WriteLine(Stringify(value));
 			return null;
 		}
 	}

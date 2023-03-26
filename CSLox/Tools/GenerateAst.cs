@@ -12,14 +12,16 @@ namespace CSLox.Tools
 					  	"Binary   : Expr left, Token _operator, Expr right",
 						"Grouping : Expr expression",
 						"Literal  : object value",
-						"Unary    : Token _operator, Expr right"
+						"Unary    : Token _operator, Expr right",
+						"Variable : Token name"
 					  });
 			DefineAst(outputDir,
 					  "Stmt",
 					  new List<string>
 					  {
 					  	"Expression : Expr expression",
-						"Print      : Expr expression"
+						"Print      : Expr expression",
+						"Var        : Token name, Expr initializer"
 					  });
 		}
 		

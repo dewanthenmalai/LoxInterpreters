@@ -12,6 +12,7 @@ namespace CSLox.Grammar
 		T Visit(Grouping expr);
 		T Visit(Literal expr);
 		T Visit(Unary expr);
+		T Visit(Variable expr);
 	}
 
 	internal class Binary : Expr
@@ -72,6 +73,21 @@ namespace CSLox.Grammar
 		{
 			this._operator = _operator;
 			this.right = right;
+		}
+
+		internal override T Accept<T>(ExprVisitor<T> visitor)
+		{
+		return visitor.Visit(this);
+		}
+	}
+
+	internal class Variable : Expr
+	{
+		internal readonly Token name;
+
+		internal Variable(Token name)
+		{
+			this.name = name;
 		}
 
 		internal override T Accept<T>(ExprVisitor<T> visitor)
