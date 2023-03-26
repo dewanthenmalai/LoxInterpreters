@@ -101,7 +101,7 @@ namespace CSLox
 			}
 			else
 			{
-				Lox.Error(line, @$"Unexpected character ""{c}""");
+				Lox.Error(line, @$"Unexpected character '{c}'.");
 			}
 		}
 		
@@ -183,7 +183,7 @@ namespace CSLox
 			}
 			if(isAtEnd)
 			{
-				Lox.Error(line, "Unterminated string");
+				Lox.Error(line, "Unterminated string.");
 				return;
 			}
 			Advance();

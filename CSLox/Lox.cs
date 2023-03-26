@@ -1,11 +1,14 @@
-﻿namespace CSLox
+﻿using CSLox.Expressions;
+using CSLox.Tools;
+namespace CSLox
 {
 	public class Lox
 	{
-		public static bool hadError = false;
+		internal static bool hadError = false;
 		
 		public static void Main(string[] args)
 		{
+			GenerateAst.DefineAst(@".\Expressions");
 			if(args.Length > 1)
 			{
 				Console.WriteLine("Usage: cslox [script]");
@@ -44,15 +47,29 @@
 		{
 			Scanner scanner = new Scanner(source);
 			List<Token> tokens = scanner.ScanTokens();
-			foreach(var token in tokens)
-			{
-				Console.WriteLine(token);
-			}
+			Parser parser = new Parser(tokens);
+			Expression? expr = parser.Parse();
+			//stop on syntax error
+			if(hadError) return;
+			
+			Console.WriteLine(new AstPrinter().Print(expr));
 		}
 		
-		public static void Error(int line, string message)
+		internal static void Error(int line, string message)
 		{
 			Report(line, "", message);
+		}
+		
+		internal static void Error(Token token, string message)
+		{
+			if(token.Type == TokenType.EOF)
+			{
+				Report(token.Line, " at end", message);
+			}
+			else
+			{
+				Report(token.Line, $" at '{token.Lexeme}'", message);
+			}
 		}
 		
 		private static void Report(int line, string where, string message)
