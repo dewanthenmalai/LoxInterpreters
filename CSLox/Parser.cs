@@ -28,7 +28,15 @@ namespace CSLox
 		
 		private Expression Expression()
 		{
-			return Equality();
+			Expression expr = Equality();
+			
+			while(Match(COMMA))
+			{
+				Token _operator = Previous();
+				Expression right = Expression();
+				expr = new Binary(expr, _operator, right);
+			}
+			return expr;
 		}
 		
 		private Expression Equality()
@@ -95,6 +103,7 @@ namespace CSLox
 				Expression right = Unary();
 				return new Unary(_operator, right);
 			}
+			if(Match(BANG_EQUAL, EQUAL_EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, PLUS, SLASH, STAR)) throw Exception(Previous(), "Missing left operand of binary operator");
 			
 			return Primary();
 		}
