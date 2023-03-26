@@ -14,16 +14,14 @@ namespace CSLox
 			this.tokens = tokens;
 		}
 		
-		internal Expr Parse()
+		internal List<Stmt> Parse()
 		{
-			try
+			List<Stmt> statements = new List<Stmt>();
+			while(!isAtEnd)
 			{
-				return Expression();
+				statements.Add(Statement());
 			}
-			catch(ParseExecption)
-			{
-				return null;
-			}
+			return statements;
 		}
 		
 		private Expr Expression()
@@ -37,6 +35,26 @@ namespace CSLox
 				expr = new Binary(expr, _operator, right);
 			}
 			return expr;
+		}
+		
+		private Stmt Statement()
+		{
+			if(Match(PRINT)) return PrintStatment();
+			return ExpressionStatment();
+		}
+		
+		private Stmt PrintStatment()
+		{
+			Expr value = Expression();
+			Consume(SEMICOLON, "Expected ';' after print.");
+			return new Print(value);
+		}
+		
+		private Stmt ExpressionStatment()
+		{
+			Expr expr = Expression();
+			Consume(SEMICOLON, "Expected ';' after expression.");
+			return new Expression(expr);
 		}
 		
 		private Expr Equality()

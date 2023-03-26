@@ -10,7 +10,7 @@ namespace CSLox
 		
 		public static void Main(string[] args)
 		{
-			GenerateAst.DefineAst(@".\Grammar");
+			GenerateAst.DefineAst(@".\Grammar"); //hack to generate ASTs, since C# doesn't allow multiple Main methods
 			if(args.Length > 1)
 			{
 				Console.WriteLine("Usage: cslox [script]");
@@ -51,11 +51,11 @@ namespace CSLox
 			Scanner scanner = new Scanner(source);
 			List<Token> tokens = scanner.ScanTokens();
 			Parser parser = new Parser(tokens);
-			Expr expr = parser.Parse();
+			List<Stmt> statements = parser.Parse();
 			//stop on syntax error
 			if(hadError) return;
 			
-			interpreter.Interpret(expr);
+			interpreter.Interpret(statements);
 		}
 		
 		internal static void Error(int line, string message)

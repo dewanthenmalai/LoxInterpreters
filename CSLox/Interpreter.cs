@@ -3,14 +3,16 @@ using static CSLox.TokenType;
 
 namespace CSLox
 {
-	internal class Interpreter : ExprVisitor<object>
+	internal class Interpreter : ExprVisitor<object>, StmtVisitor<object>
 	{
-		public void Interpret(Expr expr)
+		public void Interpret(List<Stmt> statements)
 		{
 			try
 			{
-				object value = Evaluate(expr);
-				Console.WriteLine(Stringify(value));
+				foreach(Stmt statement in statements)
+				{
+					Execute(statement);
+				}
 			}
 			catch(LoxRuntimeException lrex)
 			{
@@ -125,6 +127,24 @@ namespace CSLox
 		private object Evaluate(Expr expr)
 		{
 			return expr.Accept(this);
+		}
+		
+		private void Execute(Stmt stmt)
+		{
+			stmt.Accept(this);
+		}
+
+		public object Visit(Expression stmt)
+		{
+			Evaluate(stmt.expression);
+			return null;
+		}
+
+		public object Visit(Print stmt)
+		{
+			object value = Evaluate(stmt.expression);
+			Console.WriteLine(Stringify(value));
+			return null;
 		}
 	}
 	
