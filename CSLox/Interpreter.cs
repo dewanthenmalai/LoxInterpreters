@@ -1,11 +1,11 @@
-using CSLox.Expressions;
+using CSLox.Grammar;
 using static CSLox.TokenType;
 
 namespace CSLox
 {
-	internal class Interpreter : ExpressionVisitor<object>
+	internal class Interpreter : ExprVisitor<object>
 	{
-		public void Interpret(Expression expr)
+		public void Interpret(Expr expr)
 		{
 			try
 			{
@@ -122,7 +122,7 @@ namespace CSLox
 			return obj.ToString();
 		}
 		
-		private object Evaluate(Expression expr)
+		private object Evaluate(Expr expr)
 		{
 			return expr.Accept(this);
 		}

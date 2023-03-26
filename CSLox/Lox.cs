@@ -1,4 +1,4 @@
-﻿using CSLox.Expressions;
+﻿using CSLox.Grammar;
 using CSLox.Tools;
 namespace CSLox
 {
@@ -10,7 +10,7 @@ namespace CSLox
 		
 		public static void Main(string[] args)
 		{
-			GenerateAst.DefineAst(@".\Expressions");
+			GenerateAst.DefineAst(@".\Grammar");
 			if(args.Length > 1)
 			{
 				Console.WriteLine("Usage: cslox [script]");
@@ -51,7 +51,7 @@ namespace CSLox
 			Scanner scanner = new Scanner(source);
 			List<Token> tokens = scanner.ScanTokens();
 			Parser parser = new Parser(tokens);
-			Expression expr = parser.Parse();
+			Expr expr = parser.Parse();
 			//stop on syntax error
 			if(hadError) return;
 			

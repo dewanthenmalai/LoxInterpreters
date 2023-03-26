@@ -6,13 +6,20 @@ namespace CSLox.Tools
 		public static void DefineAst(string outputDir)
 		{
 			DefineAst(outputDir,
-					  "Expression",
+					  "Expr",
 					  new List<string>
 					  {
-					  	"Binary   : Expression left, Token _operator, Expression right",
-						"Grouping : Expression expression",
-						"Literal  : object? value",
-						"Unary    : Token _operator, Expression right"
+					  	"Binary   : Expr left, Token _operator, Expr right",
+						"Grouping : Expr expression",
+						"Literal  : object value",
+						"Unary    : Token _operator, Expr right"
+					  });
+			DefineAst(outputDir,
+					  "Stmt",
+					  new List<string>
+					  {
+					  	"Expression : Expr expression",
+						"Print      : Expr expression"
 					  });
 		}
 		
@@ -21,13 +28,14 @@ namespace CSLox.Tools
 			string path = @$"{outputDir}/{baseName}.cs";
 			using(StreamWriter sw = new StreamWriter(path))
 			{
-				sw.WriteLine("namespace CSLox.Expressions");
+				sw.WriteLine("namespace CSLox.Grammar");
 				sw.WriteLine("{");
 				sw.WriteLine();
 				sw.WriteLine($"\tpublic abstract class {baseName}");
 				sw.WriteLine("\t{");
-				sw.WriteLine($"\t\tinternal abstract T Accept<T>(ExpressionVisitor<T> visitor);");
+				sw.WriteLine($"\t\tinternal abstract T Accept<T>({baseName}Visitor<T> visitor);");
 				sw.WriteLine("\t}");
+				sw.WriteLine();
 				
 				DefineVisitor(sw, baseName, types);
 				
@@ -62,7 +70,7 @@ namespace CSLox.Tools
 			}
 			sw.WriteLine("\t\t}");
 			sw.WriteLine();
-			sw.WriteLine($"\t\tinternal override T Accept<T>(ExpressionVisitor<T> visitor)");
+			sw.WriteLine($"\t\tinternal override T Accept<T>({baseName}Visitor<T> visitor)");
 			sw.WriteLine("\t\t{");
 			sw.WriteLine($"\t\treturn visitor.Visit(this);");
 			sw.WriteLine("\t\t}");
@@ -71,7 +79,7 @@ namespace CSLox.Tools
 		
 		private static void DefineVisitor(StreamWriter sw, string baseName, List<string> types)
 		{
-			sw.WriteLine($"\tinternal interface ExpressionVisitor<T>");
+			sw.WriteLine($"\tinternal interface {baseName}Visitor<T>");
 			sw.WriteLine("\t{");
 			foreach(string type in types)
 			{

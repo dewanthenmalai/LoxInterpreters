@@ -1,4 +1,4 @@
-using CSLox.Expressions;
+using CSLox.Grammar;
 using static CSLox.TokenType;
 
 namespace CSLox
@@ -14,7 +14,7 @@ namespace CSLox
 			this.tokens = tokens;
 		}
 		
-		internal Expression Parse()
+		internal Expr Parse()
 		{
 			try
 			{
@@ -26,81 +26,81 @@ namespace CSLox
 			}
 		}
 		
-		private Expression Expression()
+		private Expr Expression()
 		{
-			Expression expr = Equality();
+			Expr expr = Equality();
 			
 			while(Match(COMMA))
 			{
 				Token _operator = Previous();
-				Expression right = Expression();
+				Expr right = Expression();
 				expr = new Binary(expr, _operator, right);
 			}
 			return expr;
 		}
 		
-		private Expression Equality()
+		private Expr Equality()
 		{
-			Expression expr = Comparison();
+			Expr expr = Comparison();
 			
 			while(Match(BANG_EQUAL, EQUAL_EQUAL))
 			{
 				Token _operator = Previous();
-				Expression right = Comparison();
+				Expr right = Comparison();
 				expr = new Binary(expr, _operator, right);
 			}
 			
 			return expr;
 		}
 		
-		private Expression Comparison()
+		private Expr Comparison()
 		{
-			Expression expr = Term();
+			Expr expr = Term();
 			
 			while(Match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL))
 			{
 				Token _operator = Previous();
-				Expression right = Term();
+				Expr right = Term();
 				expr = new Binary(expr, _operator, right);
 			}
 			
 			return expr;
 		}
 		
-		private Expression Term()
+		private Expr Term()
 		{
-			Expression expr = Factor();
+			Expr expr = Factor();
 			
 			while(Match(PLUS, MINUS))
 			{
 				Token _operator = Previous();
-				Expression right = Factor();
+				Expr right = Factor();
 				expr = new Binary(expr, _operator, right);
 			}
 			
 			return expr;
 		}
 		
-		private Expression Factor()
+		private Expr Factor()
 		{
-			Expression expr = Unary();
+			Expr expr = Unary();
 			
 			while(Match(SLASH, STAR))
 			{
 				Token _operator = Previous();
-				Expression right = Unary();
+				Expr right = Unary();
 				expr = new Binary(expr, _operator, right);
 			}
 			
 			return expr;
 		}
 		
-		private Expression Unary()
+		private Expr Unary()
 		{
 			if(Match(BANG, MINUS))
 			{
 				Token _operator = Previous();
-				Expression right = Unary();
+				Expr right = Unary();
 				return new Unary(_operator, right);
 			}
 			if(Match(BANG_EQUAL, EQUAL_EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, PLUS, SLASH, STAR)) throw Exception(Previous(), "Missing left operand of binary operator");
@@ -108,7 +108,7 @@ namespace CSLox
 			return Primary();
 		}
 		
-		private Expression Primary()
+		private Expr Primary()
 		{
 			if(Match(FALSE)) return new Literal(false);
 			if(Match(TRUE)) return new Literal(true);
@@ -116,7 +116,7 @@ namespace CSLox
 			if(Match(NUMBER, STRING)) return new Literal(Previous().Literal);
 			if(Match(LEFT_PAREN))
 			{
-				Expression expr = Expression();
+				Expr expr = Expression();
 				Consume(RIGHT_PAREN, "Expect ')' after expression");
 				return new Grouping(expr);
 			}

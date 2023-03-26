@@ -1,11 +1,11 @@
 using System.Text;
-using CSLox.Expressions;
+using CSLox.Grammar;
 
 namespace CSLox
 {
-	internal class AstPrinter : ExpressionVisitor<string>
+	internal class AstPrinter : ExprVisitor<string>
 	{
-		internal string Print(Expression expr)
+		internal string Print(Expr expr)
 		{
 			return expr?.Accept(this);
 		}
@@ -30,12 +30,12 @@ namespace CSLox
 			return Parenthesize(expression._operator.Lexeme, expression.right);
 		}
 		
-		private string Parenthesize(string name, params Expression[] expressions)
+		private string Parenthesize(string name, params Expr[] expressions)
 		{
 			StringBuilder builder = new StringBuilder();
 			
 			builder.Append("(").Append(name);
-			foreach(Expression expr in expressions)
+			foreach(Expr expr in expressions)
 			{
 				builder.Append(" ");
 				builder.Append(expr.Accept(this));
