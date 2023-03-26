@@ -9,6 +9,7 @@ namespace CSLox.Tools
 					  "Expr",
 					  new List<string>
 					  {
+						"Assign   : Token name, Expr value",
 					  	"Binary   : Expr left, Token _operator, Expr right",
 						"Grouping : Expr expression",
 						"Literal  : object value",

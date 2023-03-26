@@ -8,11 +8,29 @@ namespace CSLox.Grammar
 
 	internal interface ExprVisitor<T>
 	{
+		T Visit(Assign expr);
 		T Visit(Binary expr);
 		T Visit(Grouping expr);
 		T Visit(Literal expr);
 		T Visit(Unary expr);
 		T Visit(Variable expr);
+	}
+
+	internal class Assign : Expr
+	{
+		internal readonly Token name;
+		internal readonly Expr value;
+
+		internal Assign(Token name, Expr value)
+		{
+			this.name = name;
+			this.value = value;
+		}
+
+		internal override T Accept<T>(ExprVisitor<T> visitor)
+		{
+		return visitor.Visit(this);
+		}
 	}
 
 	internal class Binary : Expr

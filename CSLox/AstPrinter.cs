@@ -5,25 +5,30 @@ namespace CSLox
 {
 	internal class AstPrinter : ExprVisitor<string>
 	{
-		public string Visit(Binary expression)
+		public string Visit(Assign expr)
 		{
-			return Parenthesize(expression._operator.lexeme, expression.left, expression.right);
+			return Parenthesize(expr.name.lexeme, expr.value);
+		}
+		
+		public string Visit(Binary expr)
+		{
+			return Parenthesize(expr._operator.lexeme, expr.left, expr.right);
 		}
 
-		public string Visit(Grouping expression)
+		public string Visit(Grouping expr)
 		{
-			return Parenthesize("group", expression.expression);
+			return Parenthesize("group", expr.expression);
 		}
 
-		public string Visit(Literal expression)
+		public string Visit(Literal expr)
 		{
-			if(expression.value == null) return "nil";
-			return expression.value.ToString()!;
+			if(expr.value == null) return "nil";
+			return expr.value.ToString()!;
 		}
 
-		public string Visit(Unary expression)
+		public string Visit(Unary expr)
 		{
-			return Parenthesize(expression._operator.lexeme, expression.right);
+			return Parenthesize(expr._operator.lexeme, expr.right);
 		}
 		
 		public string Visit(Variable expr)

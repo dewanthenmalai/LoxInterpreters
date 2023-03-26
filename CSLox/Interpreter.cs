@@ -20,6 +20,14 @@ namespace CSLox
 				Lox.RuntimeError(lrex);
 			}
 		}
+		
+		public object Visit(Assign expr)
+		{
+			object value = Evaluate(expr.value);
+			environment.Assign(expr.name, value);
+			return value;
+		}
+		
 		public object Visit(Binary expression)
 		{
 			object left = Evaluate(expression.left);
@@ -77,6 +85,12 @@ namespace CSLox
 			return null;
 		}
 		public object Visit(Variable expr) => environment.Get(expr.name);
+		
+		public object Visit(Expression stmt)
+		{
+			Evaluate(stmt.expression);
+			return null;
+		}
 		
 		public object Visit(Print stmt)
 		{
@@ -151,11 +165,7 @@ namespace CSLox
 			stmt.Accept(this);
 		}
 
-		public object Visit(Expression stmt)
-		{
-			Evaluate(stmt.expression);
-			return null;
-		}
+		
 	}
 	
 	internal class LoxRuntimeException : Exception

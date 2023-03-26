@@ -26,15 +26,16 @@ namespace CSLox
 		
 		private Expr Expression()
 		{
-			Expr expr = Equality();
+			return Assignment();
+			//Expr expr = Equality();
 			
-			while(Match(COMMA))
-			{
-				Token _operator = Previous();
-				Expr right = Expression();
-				expr = new Binary(expr, _operator, right);
-			}
-			return expr;
+			//while(Match(COMMA))
+			//{
+			//	Token _operator = Previous();
+			//	Expr right = Expression();
+			//	expr = new Binary(expr, _operator, right);
+			//}
+			//return expr;
 		}
 		
 		private Stmt Declaration()
@@ -81,6 +82,25 @@ namespace CSLox
 			Expr expr = Expression();
 			Consume(SEMICOLON, "Expected ';' after expression.");
 			return new Expression(expr);
+		}
+		
+		private Expr Assignment()
+		{
+			Expr expr = Equality();
+			
+			if(Match(EQUAL))
+			{
+				Token equals = Previous();
+				Expr value = Assignment();
+				
+				if(expr is Variable)
+				{
+					Token name = ((Variable)expr).name;
+					return new Assign(name, value);
+				}
+				Lox.Error(equals, "Invalid assignment target.");
+			}
+			return expr;
 		}
 		
 		private Expr Equality()

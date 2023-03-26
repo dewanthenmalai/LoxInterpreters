@@ -15,5 +15,15 @@ namespace CSLox
 			
 			throw new LoxRuntimeException(name, $"Undefined variable '{name.lexeme}'.");
 		}
+		
+		internal void Assign(Token name, object value)
+		{
+			if(values.ContainsKey(name.lexeme))
+			{
+				values[name.lexeme] = value;
+			}
+			
+			throw new LoxRuntimeException(name, $"Undefined variable '{name.lexeme}'.");
+		}
 	}
 }
