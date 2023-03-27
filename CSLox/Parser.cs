@@ -54,17 +54,52 @@ namespace CSLox
 		
 		private Stmt Statement()
 		{
+			if(Match(FOR)) return ForStatement();
 			if(Match(IF)) return IfStatement();
 			if(Match(PRINT)) return PrintStatment();
+			if(Match(WHILE)) return WhileStatement();
 			if(Match(LEFT_BRACE)) return new Block(Block());
 			return ExpressionStatment();
+		}
+		
+		private Stmt ForStatement()
+		{
+			Consume(LEFT_PAREN, "Expected '(' after 'for'");
+			Stmt initializer;
+			if(Match(SEMICOLON))
+			{
+				initializer = null;
+			}
+			else if(Match(VAR))
+			{
+				initializer = VarDeclaration();
+			}
+			else
+			{
+				initializer = ExpressionStatment();
+			}
+			Expr condition = null;
+			if(!Check(SEMICOLON))
+			{
+				condition = Expression();
+			}
+			Consume(SEMICOLON, "Expected ';' after loop condition");
+			Expr increment = null;
+			if(!Check(RIGHT_PAREN)) increment = Expression();
+			Consume(RIGHT_PAREN, "Unmatched '('");
+			Stmt body = Statement();
+			if(increment != null) body = new Block(new List<Stmt>{ body, new Expression(increment) });
+			if(condition == null) condition = new Literal(true);
+			body = new While(condition, body);
+			if(initializer != null) body = new Block(new List<Stmt>{ initializer, body });
+			return body;
 		}
 		
 		private Stmt IfStatement()
 		{
 			Consume(LEFT_PAREN, "Expected '(' after 'if'.");
 			Expr condition = Expression();
-			Consume(RIGHT_PAREN, "Unmatched ')'");
+			Consume(RIGHT_PAREN, "Unmatched '('");
 			Stmt thenBranch = Statement();
 			Stmt elseBranch = null;
 			if(Match(ELSE))
@@ -91,6 +126,15 @@ namespace CSLox
 			}
 			Consume(SEMICOLON, "Expected ';' after variable declaration");
 			return new Var(name, initializer);
+		}
+		
+		private Stmt WhileStatement()
+		{
+			Consume(LEFT_PAREN, "Expected'(' after 'while'.");
+			Expr condition = Expression();
+			Consume(RIGHT_PAREN, "Unmatched '('");
+			Stmt body = Statement();
+			return new While(condition, body);
 		}
 		
 		private Stmt ExpressionStatment()

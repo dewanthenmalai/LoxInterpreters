@@ -146,6 +146,15 @@ namespace CSLox
 			return null;
 		}
 		
+		public object Visit(While stmt)
+		{
+			while(IsTruthy(Evaluate(stmt.condition)))
+			{
+				Execute(stmt.body);
+			}
+			return null;
+		}
+		
 		private void CheckNumberOperand(Token _operator, object operand)
 		{
 			if(operand is double) return;

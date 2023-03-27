@@ -13,6 +13,7 @@ namespace CSLox.Grammar
 		T Visit(If stmt);
 		T Visit(Print stmt);
 		T Visit(Var stmt);
+		T Visit(While stmt);
 	}
 
 	internal class Block : Stmt
@@ -88,6 +89,23 @@ namespace CSLox.Grammar
 		{
 			this.name = name;
 			this.initializer = initializer;
+		}
+
+		public T Accept<T>(StmtVisitor<T> visitor)
+		{
+			return visitor.Visit(this);
+		}
+	}
+
+	internal class While : Stmt
+	{
+		internal readonly Expr condition;
+		internal readonly Stmt body;
+
+		internal While(Expr condition, Stmt body)
+		{
+			this.condition = condition;
+			this.body = body;
 		}
 
 		public T Accept<T>(StmtVisitor<T> visitor)
