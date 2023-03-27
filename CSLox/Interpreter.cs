@@ -73,6 +73,20 @@ namespace CSLox
 		public object Visit(Grouping expr) => Evaluate(expr.expression);
 
 		public object Visit(Literal expr) => expr.value;
+		
+		public object Visit(Logical expr)
+		{
+			object left = Evaluate(expr.left);
+			if(expr._operator.type == TokenType.OR)
+			{
+				if(IsTruthy(left)) return left;
+			}
+			else
+			{
+				if(!IsTruthy(left)) return left;
+			}
+			return Evaluate(expr.right);
+		}
 
 		public object Visit(Unary expr)
 		{

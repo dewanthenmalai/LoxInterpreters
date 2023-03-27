@@ -12,6 +12,7 @@ namespace CSLox.Grammar
 		T Visit(Binary expr);
 		T Visit(Grouping expr);
 		T Visit(Literal expr);
+		T Visit(Logical expr);
 		T Visit(Unary expr);
 		T Visit(Variable expr);
 	}
@@ -74,6 +75,25 @@ namespace CSLox.Grammar
 		internal Literal(object value)
 		{
 			this.value = value;
+		}
+
+		public T Accept<T>(ExprVisitor<T> visitor)
+		{
+			return visitor.Visit(this);
+		}
+	}
+
+	internal class Logical : Expr
+	{
+		internal readonly Expr left;
+		internal readonly Token _operator;
+		internal readonly Expr right;
+
+		internal Logical(Expr left, Token _operator, Expr right)
+		{
+			this.left = left;
+			this._operator = _operator;
+			this.right = right;
 		}
 
 		public T Accept<T>(ExprVisitor<T> visitor)

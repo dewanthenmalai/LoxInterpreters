@@ -131,6 +131,30 @@ namespace CSLox
 			return expr;
 		}
 		
+		private Expr Or()
+		{
+			Expr expr = And();
+			while(Match(OR))
+			{
+				Token _operator = Previous();
+				Expr right = And();
+				expr = new Logical(expr, _operator, right);
+			}
+			return expr;
+		}
+		
+		private Expr And()
+		{
+			Expr expr = Equality();
+			while(Match(AND))
+			{
+				Token _operator = Previous();
+				Expr right = Equality();
+				expr = new Logical(expr, _operator, right);
+			}
+			return expr;
+		}
+		
 		private Expr Equality()
 		{
 			Expr expr = Comparison();

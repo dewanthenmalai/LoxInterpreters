@@ -13,6 +13,7 @@ namespace CSLox.Tools
 					  	"Binary   : Expr left, Token _operator, Expr right",
 						"Grouping : Expr expression",
 						"Literal  : object value",
+						"Logical  : Expr left, Token _operator, Expr right",
 						"Unary    : Token _operator, Expr right",
 						"Variable : Token name"
 					  });

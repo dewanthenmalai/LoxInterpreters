@@ -25,6 +25,11 @@ namespace CSLox
 			if(expr.value == null) return "nil";
 			return expr.value.ToString()!;
 		}
+		
+		public string Visit(Logical expr)
+		{
+			return Parenthesize(expr._operator.lexeme, expr.left, expr.right);
+		}
 
 		public string Visit(Unary expr)
 		{
