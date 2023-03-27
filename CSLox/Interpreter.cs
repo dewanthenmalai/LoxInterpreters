@@ -104,6 +104,19 @@ namespace CSLox
 			return null;
 		}
 		
+		public object Visit(If stmt)
+		{
+			if(IsTruthy(Evaluate(stmt.condition)))
+			{
+				Execute(stmt.thenBranch);
+			}
+			else
+			{
+				Execute(stmt.elseBranch);
+			}
+			return null;
+		}
+		
 		public object Visit(Print stmt)
 		{
 			object value = Evaluate(stmt.expression);

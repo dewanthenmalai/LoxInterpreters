@@ -22,6 +22,7 @@ namespace CSLox.Tools
 					  {
 						"Block      : List<Stmt> statments",
 					  	"Expression : Expr expression",
+						"If         : Expr condition, Stmt thenBranch, Stmt elseBranch",
 						"Print      : Expr expression",
 						"Var        : Token name, Expr initializer"
 					  });

@@ -54,9 +54,24 @@ namespace CSLox
 		
 		private Stmt Statement()
 		{
+			if(Match(IF)) return IfStatement();
 			if(Match(PRINT)) return PrintStatment();
 			if(Match(LEFT_BRACE)) return new Block(Block());
 			return ExpressionStatment();
+		}
+		
+		private Stmt IfStatement()
+		{
+			Consume(LEFT_PAREN, "Expected '(' after 'if'.");
+			Expr condition = Expression();
+			Consume(RIGHT_PAREN, "Unmatched ')'");
+			Stmt thenBranch = Statement();
+			Stmt elseBranch = null;
+			if(Match(ELSE))
+			{
+				elseBranch = Statement();
+			}
+			return new If(condition, thenBranch, elseBranch);
 		}
 		
 		private Stmt PrintStatment()

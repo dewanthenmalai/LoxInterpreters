@@ -10,6 +10,7 @@ namespace CSLox.Grammar
 	{
 		T Visit(Block stmt);
 		T Visit(Expression stmt);
+		T Visit(If stmt);
 		T Visit(Print stmt);
 		T Visit(Var stmt);
 	}
@@ -36,6 +37,25 @@ namespace CSLox.Grammar
 		internal Expression(Expr expression)
 		{
 			this.expression = expression;
+		}
+
+		public T Accept<T>(StmtVisitor<T> visitor)
+		{
+			return visitor.Visit(this);
+		}
+	}
+
+	internal class If : Stmt
+	{
+		internal readonly Expr condition;
+		internal readonly Stmt thenBranch;
+		internal readonly Stmt elseBranch;
+
+		internal If(Expr condition, Stmt thenBranch, Stmt elseBranch)
+		{
+			this.condition = condition;
+			this.thenBranch = thenBranch;
+			this.elseBranch = elseBranch;
 		}
 
 		public T Accept<T>(StmtVisitor<T> visitor)
