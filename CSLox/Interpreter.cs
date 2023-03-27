@@ -6,7 +6,7 @@ namespace CSLox
 	internal class Interpreter : ExprVisitor<object>, StmtVisitor<object>
 	{
 		private Environment environment = new Environment();
-		public void Interpret(List<Stmt> statements)
+		internal void Interpret(List<Stmt> statements)
 		{
 			try
 			{
@@ -21,6 +21,11 @@ namespace CSLox
 			}
 		}
 		
+		internal void Interpret(Expr expression)
+		{
+			Console.WriteLine(Evaluate(expression).ToString());
+		}
+		
 		public object Visit(Assign expr)
 		{
 			object value = Evaluate(expr.value);
@@ -28,63 +33,70 @@ namespace CSLox
 			return value;
 		}
 		
-		public object Visit(Binary expression)
+		public object Visit(Binary expr)
 		{
-			object left = Evaluate(expression.left);
-			object right = Evaluate(expression.right);
+			object left = Evaluate(expr.left);
+			object right = Evaluate(expr.right);
 			
-			switch(expression._operator.type)
+			switch(expr._operator.type)
 			{
 				case BANG_EQUAL: return !IsEqual(left, right);
 				case EQUAL_EQUAL: return IsEqual(left, right);
 				case GREATER:
-					CheckNumberOperands(expression._operator, left, right);
+					CheckNumberOperands(expr._operator, left, right);
 					return (double)left > (double)right;
 				case GREATER_EQUAL:
-					CheckNumberOperands(expression._operator, left, right);
+					CheckNumberOperands(expr._operator, left, right);
 					return (double)left >= (double)right;
 				case LESS:
-					CheckNumberOperands(expression._operator, left, right);
+					CheckNumberOperands(expr._operator, left, right);
 					return (double)left < (double)right;
 				case LESS_EQUAL: 
-					CheckNumberOperands(expression._operator, left, right);
+					CheckNumberOperands(expr._operator, left, right);
 					return (double)left <= (double)right;
 				case MINUS:
-					CheckNumberOperands(expression._operator, left, right);
+					CheckNumberOperands(expr._operator, left, right);
 					return (double)left - (double)right;
 				case SLASH:
-					CheckNumberOperands(expression._operator, left, right);
+					CheckNumberOperands(expr._operator, left, right);
 					return (double)left / (double)right;
 				case STAR:
-					CheckNumberOperands(expression._operator, left, right);return (double)left * (double)right;
+					CheckNumberOperands(expr._operator, left, right);return (double)left * (double)right;
 				case PLUS:
 					if(left is double && right is double) return (double)left + (double)right;
 					if(left is string && right is string) return (string)left + (string)right;
-					throw new LoxRuntimeException(expression._operator, "Operands must be two numbers or two strings.");
+					throw new LoxRuntimeException(expr._operator, "Operands must be two numbers or two strings.");
 			}
 			return null;
 		}
 
-		public object Visit(Grouping expression) => Evaluate(expression.expression);
+		public object Visit(Grouping expr) => Evaluate(expr.expression);
 
-		public object Visit(Literal expression) => expression.value;
+		public object Visit(Literal expr) => expr.value;
 
-		public object Visit(Unary expression)
+		public object Visit(Unary expr)
 		{
-			object right = Evaluate(expression.right);
+			object right = Evaluate(expr.right);
 			
-			switch(expression._operator.type)
+			switch(expr._operator.type)
 			{
 				case BANG:
 					return !IsTruthy(right);
 				case MINUS:
-					CheckNumberOperand(expression._operator, right);
+					CheckNumberOperand(expr._operator, right);
 					return -(double)right;
 			}
 			
 			return null;
 		}
-		public object Visit(Variable expr) => environment.Get(expr.name);
+		
+		public object Visit(Block stmt)
+		{
+			ExecuteBlock(stmt.statments, new Environment(environment));
+			return null;
+		}
+		
+		public object Visit(Variable stmt) => environment.Get(stmt.name);
 		
 		public object Visit(Expression stmt)
 		{
@@ -165,7 +177,22 @@ namespace CSLox
 			stmt.Accept(this);
 		}
 
-		
+		private void ExecuteBlock(List<Stmt> statements, Environment environment)
+		{
+			Environment previous = this.environment;
+			try
+			{
+				this.environment = environment;
+				foreach(Stmt statement in statements)
+				{
+					Execute(statement);
+				}
+			}
+			finally
+			{
+				this.environment = previous;
+			}
+		}
 	}
 	
 	internal class LoxRuntimeException : Exception

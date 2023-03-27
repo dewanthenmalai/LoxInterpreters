@@ -55,6 +55,7 @@ namespace CSLox
 		private Stmt Statement()
 		{
 			if(Match(PRINT)) return PrintStatment();
+			if(Match(LEFT_BRACE)) return new Block(Block());
 			return ExpressionStatment();
 		}
 		
@@ -82,6 +83,18 @@ namespace CSLox
 			Expr expr = Expression();
 			Consume(SEMICOLON, "Expected ';' after expression.");
 			return new Expression(expr);
+		}
+		
+		private List<Stmt> Block()
+		{
+			List<Stmt> statements = new List<Stmt>();
+			while(!Check(RIGHT_BRACE) && !isAtEnd)
+			{
+				statements.Add(Declaration());
+			}
+			
+			Consume(RIGHT_BRACE, "Expect '}' after block scope.");
+			return statements;
 		}
 		
 		private Expr Assignment()
