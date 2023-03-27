@@ -104,7 +104,15 @@ namespace CSLox
 			Stmt elseBranch = null;
 			if(Match(ELSE))
 			{
-				elseBranch = Statement();
+				if(Peek().type == IF)
+				{
+					Advance();
+					elseBranch = IfStatement();
+				}
+				else
+				{
+					elseBranch = Statement();
+				}
 			}
 			return new If(condition, thenBranch, elseBranch);
 		}
