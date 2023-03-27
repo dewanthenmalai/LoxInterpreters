@@ -1,9 +1,9 @@
 namespace CSLox.Grammar
 {
 
-	public abstract class Expr
+	internal interface Expr
 	{
-		internal abstract T Accept<T>(ExprVisitor<T> visitor);
+		public T Accept<T>(ExprVisitor<T> visitor);
 	}
 
 	internal interface ExprVisitor<T>
@@ -27,9 +27,9 @@ namespace CSLox.Grammar
 			this.value = value;
 		}
 
-		internal override T Accept<T>(ExprVisitor<T> visitor)
+		public T Accept<T>(ExprVisitor<T> visitor)
 		{
-		return visitor.Visit(this);
+			return visitor.Visit(this);
 		}
 	}
 
@@ -46,9 +46,9 @@ namespace CSLox.Grammar
 			this.right = right;
 		}
 
-		internal override T Accept<T>(ExprVisitor<T> visitor)
+		public T Accept<T>(ExprVisitor<T> visitor)
 		{
-		return visitor.Visit(this);
+			return visitor.Visit(this);
 		}
 	}
 
@@ -61,9 +61,9 @@ namespace CSLox.Grammar
 			this.expression = expression;
 		}
 
-		internal override T Accept<T>(ExprVisitor<T> visitor)
+		public T Accept<T>(ExprVisitor<T> visitor)
 		{
-		return visitor.Visit(this);
+			return visitor.Visit(this);
 		}
 	}
 
@@ -76,9 +76,9 @@ namespace CSLox.Grammar
 			this.value = value;
 		}
 
-		internal override T Accept<T>(ExprVisitor<T> visitor)
+		public T Accept<T>(ExprVisitor<T> visitor)
 		{
-		return visitor.Visit(this);
+			return visitor.Visit(this);
 		}
 	}
 
@@ -93,9 +93,9 @@ namespace CSLox.Grammar
 			this.right = right;
 		}
 
-		internal override T Accept<T>(ExprVisitor<T> visitor)
+		public T Accept<T>(ExprVisitor<T> visitor)
 		{
-		return visitor.Visit(this);
+			return visitor.Visit(this);
 		}
 	}
 
@@ -108,9 +108,9 @@ namespace CSLox.Grammar
 			this.name = name;
 		}
 
-		internal override T Accept<T>(ExprVisitor<T> visitor)
+		public T Accept<T>(ExprVisitor<T> visitor)
 		{
-		return visitor.Visit(this);
+			return visitor.Visit(this);
 		}
 	}
 }

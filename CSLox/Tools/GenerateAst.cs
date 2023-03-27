@@ -20,6 +20,7 @@ namespace CSLox.Tools
 					  "Stmt",
 					  new List<string>
 					  {
+						"Block      : List<Stmt> statments",
 					  	"Expression : Expr expression",
 						"Print      : Expr expression",
 						"Var        : Token name, Expr initializer"
@@ -34,9 +35,9 @@ namespace CSLox.Tools
 				sw.WriteLine("namespace CSLox.Grammar");
 				sw.WriteLine("{");
 				sw.WriteLine();
-				sw.WriteLine($"\tpublic abstract class {baseName}");
+				sw.WriteLine($"\tinternal interface {baseName}");
 				sw.WriteLine("\t{");
-				sw.WriteLine($"\t\tinternal abstract T Accept<T>({baseName}Visitor<T> visitor);");
+				sw.WriteLine($"\t\tpublic T Accept<T>({baseName}Visitor<T> visitor);");
 				sw.WriteLine("\t}");
 				sw.WriteLine();
 				
@@ -73,9 +74,9 @@ namespace CSLox.Tools
 			}
 			sw.WriteLine("\t\t}");
 			sw.WriteLine();
-			sw.WriteLine($"\t\tinternal override T Accept<T>({baseName}Visitor<T> visitor)");
+			sw.WriteLine($"\t\tpublic T Accept<T>({baseName}Visitor<T> visitor)");
 			sw.WriteLine("\t\t{");
-			sw.WriteLine($"\t\treturn visitor.Visit(this);");
+			sw.WriteLine($"\t\t\treturn visitor.Visit(this);");
 			sw.WriteLine("\t\t}");
 			sw.WriteLine("\t}");
 		}

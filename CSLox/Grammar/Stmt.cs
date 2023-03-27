@@ -1,9 +1,9 @@
 namespace CSLox.Grammar
 {
 
-	public abstract class Stmt
+	internal interface Stmt
 	{
-		internal abstract T Accept<T>(StmtVisitor<T> visitor);
+		public T Accept<T>(StmtVisitor<T> visitor);
 	}
 
 	internal interface StmtVisitor<T>
@@ -23,9 +23,9 @@ namespace CSLox.Grammar
 			this.statments = statments;
 		}
 
-		internal override T Accept<T>(StmtVisitor<T> visitor)
+		public T Accept<T>(StmtVisitor<T> visitor)
 		{
-		return visitor.Visit(this);
+			return visitor.Visit(this);
 		}
 	}
 
@@ -38,9 +38,9 @@ namespace CSLox.Grammar
 			this.expression = expression;
 		}
 
-		internal override T Accept<T>(StmtVisitor<T> visitor)
+		public T Accept<T>(StmtVisitor<T> visitor)
 		{
-		return visitor.Visit(this);
+			return visitor.Visit(this);
 		}
 	}
 
@@ -53,9 +53,9 @@ namespace CSLox.Grammar
 			this.expression = expression;
 		}
 
-		internal override T Accept<T>(StmtVisitor<T> visitor)
+		public T Accept<T>(StmtVisitor<T> visitor)
 		{
-		return visitor.Visit(this);
+			return visitor.Visit(this);
 		}
 	}
 
@@ -70,9 +70,9 @@ namespace CSLox.Grammar
 			this.initializer = initializer;
 		}
 
-		internal override T Accept<T>(StmtVisitor<T> visitor)
+		public T Accept<T>(StmtVisitor<T> visitor)
 		{
-		return visitor.Visit(this);
+			return visitor.Visit(this);
 		}
 	}
 }
