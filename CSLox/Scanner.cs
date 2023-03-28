@@ -15,6 +15,7 @@ namespace CSLox
 		private static readonly Dictionary<string, TokenType> keywords = new Dictionary<string, TokenType>
 		{
 			{"and", AND},
+			{"base", BASE},
 			{"class", CLASS},
 			{"else", ELSE},
 			{"false", FALSE},
@@ -25,7 +26,6 @@ namespace CSLox
 			{"or", OR},
 			{"print", PRINT},
 			{"return", RETURN},
-			{"super", SUPER},
 			{"this", THIS},
 			{"true", TRUE},
 			{"var", VAR},

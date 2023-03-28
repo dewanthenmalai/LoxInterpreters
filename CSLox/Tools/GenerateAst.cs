@@ -10,6 +10,7 @@ namespace CSLox.Tools
 					  new List<string>
 					  {
 						"Assign   : Token name, Expr value",
+						"Base     : Token keyword, Token method",
 					  	"Binary   : Expr left, Token _operator, Expr right",
 						"Call     : Expr callee, Token paren, List<Expr> arguments",
 						"Get      : Expr obj, Token name",
@@ -26,7 +27,7 @@ namespace CSLox.Tools
 					  new List<string>
 					  {
 						"Block      : List<Stmt> statments",
-						"Class      : Token name, List<Function> methods",
+						"Class      : Token name, Variable baseclass, List<Function> methods",
 					  	"Expression : Expr expression",
 						"Function   : Token name, List<Token> parameters, List<Stmt> body",
 						"If         : Expr condition, Stmt thenBranch, Stmt elseBranch",

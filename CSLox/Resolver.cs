@@ -20,7 +20,8 @@ namespace CSLox
 		private enum ClassType
 		{
 			NONE,
-			CLASS
+			CLASS,
+			SUBCLASS
 		}
 		
 		#endregion
@@ -62,6 +63,14 @@ namespace CSLox
 			currentClass = ClassType.CLASS;
 			Declare(stmt.name);
 			Define(stmt.name);
+			if(stmt.baseclass != null && stmt.name.lexeme.Equals(stmt.baseclass.name.lexeme)) Lox.Error(stmt.baseclass.name, "A class cannot inherit from itself.");
+			if(stmt.baseclass != null)
+			{
+				currentClass = ClassType.SUBCLASS;
+				Resolve(stmt.baseclass);
+				BeginScope();
+				scopes.Peek()["base"] = true;
+			}
 			BeginScope();
 			scopes.Peek()["this"] = true;
 			foreach(Function method in stmt.methods)
@@ -71,6 +80,7 @@ namespace CSLox
 				ResolveFunction(method, declaration);
 			}
 			EndScope();
+			if(stmt.baseclass != null) EndScope();
 			currentClass = enclosingClass;
 			return null;
 		}
@@ -140,6 +150,14 @@ namespace CSLox
 		{
 			Resolve(expr.value);
 			ResolveLocal(expr, expr.name);
+			return null;
+		}
+		
+		public object Visit(Base expr)
+		{
+			if(currentClass == ClassType.NONE) Lox.Error(expr.keyword, "Cannot use 'base' outside a class.");
+			else if(currentClass != ClassType.SUBCLASS) Lox.Error(expr.keyword, "Cannot use 'base' in a non-inheriting class.");
+			ResolveLocal(expr, expr.keyword);
 			return null;
 		}
 

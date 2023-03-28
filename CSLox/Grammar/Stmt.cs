@@ -37,11 +37,13 @@ namespace CSLox.Grammar
 	internal class Class : Stmt
 	{
 		internal readonly Token name;
+		internal readonly Variable baseclass;
 		internal readonly List<Function> methods;
 
-		internal Class(Token name, List<Function> methods)
+		internal Class(Token name, Variable baseclass, List<Function> methods)
 		{
 			this.name = name;
+			this.baseclass = baseclass;
 			this.methods = methods;
 		}
 

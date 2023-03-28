@@ -80,6 +80,12 @@ namespace CSLox
 		private Stmt ClassDeclaration()
 		{
 			Token name = Consume(IDENTIFIER, "Expected class name.");
+			Variable baseclass = null;
+			if(Match(LESS))
+			{
+				Consume(IDENTIFIER, "Expected base class name.");
+				baseclass = new Variable(Previous());
+			}
 			Consume(LEFT_BRACE, "Expected '{' before class body.");
 			List<Function> methods = new List<Function>();
 			while(!Check(RIGHT_BRACE) && !isAtEnd)
@@ -87,7 +93,7 @@ namespace CSLox
 				methods.Add(Function("method"));
 			}
 			Consume(RIGHT_BRACE, "Unmatched'{'");
-			return new Class(name, methods);
+			return new Class(name, baseclass, methods);
 		}
 		
 		private Function Function(string kind)
@@ -390,6 +396,13 @@ namespace CSLox
 			if(Match(TRUE)) return new Literal(true);
 			if(Match(NIL)) return new Literal(null);
 			if(Match(NUMBER, STRING)) return new Literal(Previous().literal);
+			if(Match(BASE))
+			{
+				Token keyword = Previous();
+				Consume(DOT, "Expected '.' after 'base'.");
+				Token method = Consume(IDENTIFIER, "Expected base class method name");
+				return new Base(keyword, method);
+			}
 			if(Match(THIS)) return new This(Previous());
 			if(Match(IDENTIFIER)) return new Variable(Previous());
 			if(Match(LEFT_PAREN))

@@ -9,6 +9,7 @@ namespace CSLox.Grammar
 	internal interface ExprVisitor<T>
 	{
 		T Visit(Assign expr);
+		T Visit(Base expr);
 		T Visit(Binary expr);
 		T Visit(Call expr);
 		T Visit(Get expr);
@@ -30,6 +31,23 @@ namespace CSLox.Grammar
 		{
 			this.name = name;
 			this.value = value;
+		}
+
+		public T Accept<T>(ExprVisitor<T> visitor)
+		{
+			return visitor.Visit(this);
+		}
+	}
+
+	internal class Base : Expr
+	{
+		internal readonly Token keyword;
+		internal readonly Token method;
+
+		internal Base(Token keyword, Token method)
+		{
+			this.keyword = keyword;
+			this.method = method;
 		}
 
 		public T Accept<T>(ExprVisitor<T> visitor)

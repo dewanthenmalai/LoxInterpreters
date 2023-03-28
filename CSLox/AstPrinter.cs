@@ -10,6 +10,11 @@ namespace CSLox
 			return Parenthesize(expr.name.lexeme, expr.value);
 		}
 		
+		public string Visit(Base expr)
+		{
+			throw new NotImplementedException();
+		}
+		
 		public string Visit(Binary expr)
 		{
 			return Parenthesize(expr._operator.lexeme, expr.left, expr.right);

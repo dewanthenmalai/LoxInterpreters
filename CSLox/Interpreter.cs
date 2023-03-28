@@ -79,6 +79,12 @@ namespace CSLox
 		
 		public object Visit(Class stmt)
 		{
+			object baseclass = null;
+			if(stmt.baseclass != null)
+			{
+				baseclass = Evaluate(stmt.baseclass);
+				if(!(baseclass is LoxClass)) throw new LoxRuntimeException(stmt.baseclass.name, "Base class must be a class.");
+			}
 			environment.Define(stmt.name.lexeme, null);
 			Dictionary<string, LoxFunction> methods = new Dictionary<string, LoxFunction>();
 			foreach(Function method in stmt.methods)
@@ -86,7 +92,11 @@ namespace CSLox
 				LoxFunction function = new LoxFunction(method, environment, method.name.lexeme.Equals("init"));
 				methods[method.name.lexeme] = function;
 			}
-			LoxClass cls = new LoxClass(stmt.name.lexeme, methods);
+			LoxClass cls = new LoxClass(stmt.name.lexeme, (LoxClass)baseclass, methods);
+			if(baseclass != null)
+			{
+				environment = environment.enclosing;
+			}
 			environment.Assign(stmt.name, cls);
 			return null;
 		}
@@ -164,6 +174,16 @@ namespace CSLox
 				globals.Assign(expr.name, value);
 			}
 			return null;
+		}
+		
+		public object Visit(Base expr)
+		{
+			int distance = locals[expr];
+			LoxClass baseclass = (LoxClass)environment.GetAt(distance, "base");
+			LoxInstance obj = (LoxInstance)environment.GetAt(distance - 1, "this");
+			LoxFunction method = baseclass.FindMethod(expr.method.lexeme);
+			if(method == null) throw new LoxRuntimeException(expr.method, $"Undefined property '{expr.method.lexeme}'.");
+			return method.Bind(obj);
 		}
 		
 		public object Visit(Binary expr)
