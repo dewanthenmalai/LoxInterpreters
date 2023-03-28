@@ -139,7 +139,7 @@ namespace CSLox
 		
 		public object Visit(Function stmt)
 		{
-			LoxFunction function = new LoxFunction(stmt);
+			LoxFunction function = new LoxFunction(stmt, environment);
 			environment.Define(stmt.name.lexeme, function);
 			return null;
 		}
