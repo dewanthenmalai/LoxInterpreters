@@ -11,9 +11,12 @@ namespace CSLox.Grammar
 		T Visit(Assign expr);
 		T Visit(Binary expr);
 		T Visit(Call expr);
+		T Visit(Get expr);
 		T Visit(Grouping expr);
 		T Visit(Literal expr);
 		T Visit(Logical expr);
+		T Visit(Set expr);
+		T Visit(This expr);
 		T Visit(Unary expr);
 		T Visit(Variable expr);
 	}
@@ -73,6 +76,23 @@ namespace CSLox.Grammar
 		}
 	}
 
+	internal class Get : Expr
+	{
+		internal readonly Expr obj;
+		internal readonly Token name;
+
+		internal Get(Expr obj, Token name)
+		{
+			this.obj = obj;
+			this.name = name;
+		}
+
+		public T Accept<T>(ExprVisitor<T> visitor)
+		{
+			return visitor.Visit(this);
+		}
+	}
+
 	internal class Grouping : Expr
 	{
 		internal readonly Expr expression;
@@ -114,6 +134,40 @@ namespace CSLox.Grammar
 			this.left = left;
 			this._operator = _operator;
 			this.right = right;
+		}
+
+		public T Accept<T>(ExprVisitor<T> visitor)
+		{
+			return visitor.Visit(this);
+		}
+	}
+
+	internal class Set : Expr
+	{
+		internal readonly Expr obj;
+		internal readonly Token name;
+		internal readonly Expr value;
+
+		internal Set(Expr obj, Token name, Expr value)
+		{
+			this.obj = obj;
+			this.name = name;
+			this.value = value;
+		}
+
+		public T Accept<T>(ExprVisitor<T> visitor)
+		{
+			return visitor.Visit(this);
+		}
+	}
+
+	internal class This : Expr
+	{
+		internal readonly Token keyword;
+
+		internal This(Token keyword)
+		{
+			this.keyword = keyword;
 		}
 
 		public T Accept<T>(ExprVisitor<T> visitor)

@@ -5,15 +5,41 @@ namespace CSLox
 {
 	internal class Interpreter : ExprVisitor<object>, StmtVisitor<object>
 	{
+		#region Members 
 		
 		internal readonly Environment globals = new Environment();
 		private Environment environment;
 		private readonly Dictionary<Expr, int> locals = new Dictionary<Expr, int>();
 		
+		#endregion
+		
+		#region Constructors
+		
 		internal Interpreter()
 		{
 			environment = globals;
 			globals.Define("clock", new Clock());
+		}
+		
+		#endregion
+		
+		#region Internal Methods
+		
+		internal void ExecuteBlock(List<Stmt> statements, Environment environment)
+		{
+			Environment previous = this.environment;
+			try
+			{
+				this.environment = environment;
+				foreach(Stmt statement in statements)
+				{
+					Execute(statement);
+				}
+			}
+			finally
+			{
+				this.environment = previous;
+			}
 		}
 		
 		internal void Interpret(List<Stmt> statements)
@@ -35,6 +61,96 @@ namespace CSLox
 		{
 			Console.WriteLine(Evaluate(expression).ToString());
 		}
+		
+		internal void Resolve(Expr expr, int depth)
+		{
+			locals[expr] = depth;
+		}
+		
+		#endregion
+		
+		#region StmtVisitor<object>
+		
+		public object Visit(Block stmt)
+		{
+			ExecuteBlock(stmt.statments, new Environment(environment));
+			return null;
+		}
+		
+		public object Visit(Class stmt)
+		{
+			environment.Define(stmt.name.lexeme, null);
+			Dictionary<string, LoxFunction> methods = new Dictionary<string, LoxFunction>();
+			foreach(Function method in stmt.methods)
+			{
+				LoxFunction function = new LoxFunction(method, environment, method.name.lexeme.Equals("init"));
+				methods[method.name.lexeme] = function;
+			}
+			LoxClass cls = new LoxClass(stmt.name.lexeme, methods);
+			environment.Assign(stmt.name, cls);
+			return null;
+		}
+		
+		public object Visit(Expression stmt)
+		{
+			Evaluate(stmt.expression);
+			return null;
+		}
+		
+		public object Visit(Function stmt)
+		{
+			LoxFunction function = new LoxFunction(stmt, environment, false);
+			environment.Define(stmt.name.lexeme, function);
+			return null;
+		}
+		
+		public object Visit(If stmt)
+		{
+			if(IsTruthy(Evaluate(stmt.condition)))
+			{
+				Execute(stmt.thenBranch);
+			}
+			else if(stmt.elseBranch != null)
+			{
+				Execute(stmt.elseBranch);
+			}
+			return null;
+		}
+		
+		public object Visit(Print stmt)
+		{
+			object value = Evaluate(stmt.expression);
+			Console.WriteLine(Stringify(value));
+			return null;
+		}
+		
+		public object Visit(Return stmt)
+		{
+			object value = null;
+			if(stmt.value != null) value = Evaluate(stmt.value);
+			throw new ReturnException(value);
+		}
+		
+		public object Visit(Var stmt)
+		{
+			object value = null;
+			if(stmt.initializer != null) value = Evaluate(stmt.initializer);
+			environment.Define(stmt.name.lexeme, value);
+			return null;
+		}
+		
+		public object Visit(While stmt)
+		{
+			while(IsTruthy(Evaluate(stmt.condition)))
+			{
+				Execute(stmt.body);
+			}
+			return null;
+		}
+		
+		#endregion
+		
+		#region ExprVisitor<object>
 		
 		public object Visit(Assign expr)
 		{
@@ -96,6 +212,13 @@ namespace CSLox
 			if(arguments.Count != function.Arity()) throw new LoxRuntimeException(expr.paren, $"Expected {function.Arity()} argument but received {arguments.Count}.");
 			return function.Call(this, arguments);
 		}
+		
+		public object Visit(Get expr)
+		{
+			object obj = Evaluate(expr.obj);
+			if(obj is LoxInstance) return ((LoxInstance)obj).Get(expr.name);
+			throw new LoxRuntimeException(expr.name, "Only instances have properties.");
+		}
 
 		public object Visit(Grouping expr) => Evaluate(expr.expression);
 
@@ -114,6 +237,23 @@ namespace CSLox
 			}
 			return Evaluate(expr.right);
 		}
+		
+		public object Visit(Set expr)
+		{
+			object obj = Evaluate(expr.obj);
+			if(!(obj is LoxInstance))
+			{
+				throw new LoxRuntimeException(expr.name, "Only instances have fields");
+			}
+			object value = Evaluate(expr.value);
+			((LoxInstance)obj).Set(expr.name, value);
+			return value;
+		}
+		
+		public object Visit(This expr)
+		{
+			return LookUpVariable(expr.keyword, expr);
+		}
 
 		public object Visit(Unary expr)
 		{
@@ -131,78 +271,15 @@ namespace CSLox
 			return null;
 		}
 		
-		public object Visit(Block stmt)
-		{
-			ExecuteBlock(stmt.statments, new Environment(environment));
-			return null;
-		}
-		
 		public object Visit(Variable expr) => LookUpVariable(expr.name, expr);
 		
-		private object LookUpVariable(Token name, Expr expr)
-		{
-			if(locals.ContainsKey(expr))
-			{
-				return environment.GetAt(locals[expr], name.lexeme);
-			}
-			return globals.Get(name);
-		}
+		#endregion
 		
-		public object Visit(Expression stmt)
-		{
-			Evaluate(stmt.expression);
-			return null;
-		}
+		#region Private Methods
 		
-		public object Visit(Function stmt)
+		private void CheckDivideByZero(Token _operator, double value)
 		{
-			LoxFunction function = new LoxFunction(stmt, environment);
-			environment.Define(stmt.name.lexeme, function);
-			return null;
-		}
-		
-		public object Visit(If stmt)
-		{
-			if(IsTruthy(Evaluate(stmt.condition)))
-			{
-				Execute(stmt.thenBranch);
-			}
-			else if(stmt.elseBranch != null)
-			{
-				Execute(stmt.elseBranch);
-			}
-			return null;
-		}
-		
-		public object Visit(Print stmt)
-		{
-			object value = Evaluate(stmt.expression);
-			Console.WriteLine(Stringify(value));
-			return null;
-		}
-		
-		public object Visit(Return stmt)
-		{
-			object value = null;
-			if(stmt.value != null) value = Evaluate(stmt.value);
-			throw new ReturnException(value);
-		}
-		
-		public object Visit(Var stmt)
-		{
-			object value = null;
-			if(stmt.initializer != null) value = Evaluate(stmt.initializer);
-			environment.Define(stmt.name.lexeme, value);
-			return null;
-		}
-		
-		public object Visit(While stmt)
-		{
-			while(IsTruthy(Evaluate(stmt.condition)))
-			{
-				Execute(stmt.body);
-			}
-			return null;
+			if(_operator.type == SLASH && value == 0) throw new LoxRuntimeException(_operator, "Cannot divide by zero.");
 		}
 		
 		private void CheckNumberOperand(Token _operator, object operand)
@@ -220,9 +297,21 @@ namespace CSLox
 			throw new LoxRuntimeException(_operator, "Operands must be numbers.");
 		}
 		
-		private void CheckDivideByZero(Token _operator, double value)
+		private object Evaluate(Expr expr)
 		{
-			if(_operator.type == SLASH && value == 0) throw new LoxRuntimeException(_operator, "Cannot divide by zero.");
+			return expr.Accept(this);
+		}
+		
+		private void Execute(Stmt stmt)
+		{
+			stmt.Accept(this);
+		}
+		
+		private bool IsEqual(object a, object b)
+		{
+			if(a == null && b == null) return true;
+			if(a == null) return false;
+			return a.Equals(b);
 		}
 		
 		private bool IsTruthy(object obj)
@@ -234,11 +323,13 @@ namespace CSLox
 			return true;
 		}
 		
-		private bool IsEqual(object a, object b)
+		private object LookUpVariable(Token name, Expr expr)
 		{
-			if(a == null && b == null) return true;
-			if(a == null) return false;
-			return a.Equals(b);
+			if(locals.ContainsKey(expr))
+			{
+				return environment.GetAt(locals[expr], name.lexeme);
+			}
+			return globals.Get(name);
 		}
 		
 		private string Stringify(object obj)
@@ -253,37 +344,7 @@ namespace CSLox
 			return obj.ToString();
 		}
 		
-		private object Evaluate(Expr expr)
-		{
-			return expr.Accept(this);
-		}
-		
-		private void Execute(Stmt stmt)
-		{
-			stmt.Accept(this);
-		}
-		
-		internal void Resolve(Expr expr, int depth)
-		{
-			locals[expr] = depth;
-		}
-
-		internal void ExecuteBlock(List<Stmt> statements, Environment environment)
-		{
-			Environment previous = this.environment;
-			try
-			{
-				this.environment = environment;
-				foreach(Stmt statement in statements)
-				{
-					Execute(statement);
-				}
-			}
-			finally
-			{
-				this.environment = previous;
-			}
-		}
+		#endregion				
 	}
 	
 	internal class LoxRuntimeException : Exception
@@ -295,7 +356,15 @@ namespace CSLox
 			this.Token = token;
 		}
 	}
+	
+	#region Native Classes
+	
+	
+	
+	#endregion
 
+	#region Native Methods
+	
 	//C# doesn't permmit anonymous class definitions, so a concrete type must be created
 	internal class Clock : LoxCallable
 	{
@@ -305,4 +374,6 @@ namespace CSLox
 		
 		public override string ToString() => "<native function>";
 	}
+	
+	#endregion
 }

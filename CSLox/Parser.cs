@@ -5,14 +5,24 @@ namespace CSLox
 {
 	internal class Parser
 	{
+		#region Members
+		
 		private readonly List<Token> tokens;
 		private int current = 0;
 		private bool isAtEnd => Peek().type == EOF;
+		
+		#endregion
+		
+		#region Constructors
 		
 		internal Parser(List<Token> tokens)
 		{
 			this.tokens = tokens;
 		}
+		
+		#endregion
+		
+		#region Internal Methods
 		
 		internal List<Stmt> Parse()
 		{
@@ -24,24 +34,15 @@ namespace CSLox
 			return statements;
 		}
 		
-		private Expr Expression()
-		{
-			return Assignment();
-			//Expr expr = Equality();
-			
-			//while(Match(COMMA))
-			//{
-			//	Token _operator = Previous();
-			//	Expr right = Expression();
-			//	expr = new Binary(expr, _operator, right);
-			//}
-			//return expr;
-		}
+		#endregion
+		
+		#region Stmt Methods
 		
 		private Stmt Declaration()
 		{
 			try
 			{
+				if(Match(CLASS)) return ClassDeclaration();
 				if(Match(FUN)) return Function("function");
 				if(Match(VAR)) return VarDeclaration();
 				return Statement();
@@ -62,6 +63,73 @@ namespace CSLox
 			if(Match(WHILE)) return WhileStatement();
 			if(Match(LEFT_BRACE)) return new Block(Block());
 			return ExpressionStatment();
+		}
+		
+		private List<Stmt> Block()
+		{
+			List<Stmt> statements = new List<Stmt>();
+			while(!Check(RIGHT_BRACE) && !isAtEnd)
+			{
+				statements.Add(Declaration());
+			}
+			
+			Consume(RIGHT_BRACE, "Unmatched '{'");
+			return statements;
+		}
+		
+		private Stmt ClassDeclaration()
+		{
+			Token name = Consume(IDENTIFIER, "Expected class name.");
+			Consume(LEFT_BRACE, "Expected '{' before class body.");
+			List<Function> methods = new List<Function>();
+			while(!Check(RIGHT_BRACE) && !isAtEnd)
+			{
+				methods.Add(Function("method"));
+			}
+			Consume(RIGHT_BRACE, "Unmatched'{'");
+			return new Class(name, methods);
+		}
+		
+		private Function Function(string kind)
+		{
+			Token name = Consume(IDENTIFIER, $"Expected {kind} name.");
+			Consume(LEFT_PAREN, $"Expected '(' after {kind} name.");
+			List<Token> parameters = new List<Token>();
+			if(!Check(RIGHT_PAREN))
+			{
+				do
+				{
+					if(parameters.Count >= 255)
+					{
+						Lox.Error(Peek(), "Cannot use more than 255 arguemnts.");
+					}
+					parameters.Add(Consume(IDENTIFIER, "Expected parameter name."));
+				} while(Match(COMMA));
+			}
+			Consume(RIGHT_PAREN, "Unmatched '('");
+			
+			Consume(LEFT_BRACE, $"Expected '{{' before {kind} body.");
+			List<Stmt> body = Block();
+			return new Function(name, parameters, body);
+		}
+		
+		private Stmt VarDeclaration()
+		{
+			Token name = Consume(IDENTIFIER, "Expected variable name.");
+			Expr initializer = null;
+			if(Match(EQUAL))
+			{
+				initializer = Expression();
+			}
+			Consume(SEMICOLON, "Expected ';' after variable declaration");
+			return new Var(name, initializer);
+		}
+		
+		private Stmt ExpressionStatment()
+		{
+			Expr expr = Expression();
+			Consume(SEMICOLON, "Expected ';' after expression.");
+			return new Expression(expr);
 		}
 		
 		private Stmt ForStatement()
@@ -142,17 +210,7 @@ namespace CSLox
 			return new Return(keyword, value);
 		}
 		
-		private Stmt VarDeclaration()
-		{
-			Token name = Consume(IDENTIFIER, "Expected variable name.");
-			Expr initializer = null;
-			if(Match(EQUAL))
-			{
-				initializer = Expression();
-			}
-			Consume(SEMICOLON, "Expected ';' after variable declaration");
-			return new Var(name, initializer);
-		}
+		
 		
 		private Stmt WhileStatement()
 		{
@@ -163,46 +221,13 @@ namespace CSLox
 			return new While(condition, body);
 		}
 		
-		private Stmt ExpressionStatment()
-		{
-			Expr expr = Expression();
-			Consume(SEMICOLON, "Expected ';' after expression.");
-			return new Expression(expr);
-		}
+		#endregion
 		
-		private Function Function(string kind)
-		{
-			Token name = Consume(IDENTIFIER, $"Expected {kind} name.");
-			Consume(LEFT_PAREN, $"Expected '(' after {kind} name.");
-			List<Token> parameters = new List<Token>();
-			if(!Check(RIGHT_PAREN))
-			{
-				do
-				{
-					if(parameters.Count >= 255)
-					{
-						Lox.Error(Peek(), "Cannot use more than 255 arguemnts.");
-					}
-					parameters.Add(Consume(IDENTIFIER, "Expected parameter name."));
-				} while(Match(COMMA));
-			}
-			Consume(RIGHT_PAREN, "Unmatched '('");
-			
-			Consume(LEFT_BRACE, $"Expected '{{' before {kind} body.");
-			List<Stmt> body = Block();
-			return new Function(name, parameters, body);
-		}
+		#region Expr Methods
 		
-		private List<Stmt> Block()
+		private Expr Expression()
 		{
-			List<Stmt> statements = new List<Stmt>();
-			while(!Check(RIGHT_BRACE) && !isAtEnd)
-			{
-				statements.Add(Declaration());
-			}
-			
-			Consume(RIGHT_BRACE, "Expect '}' after block scope.");
-			return statements;
+			return Assignment();
 		}
 		
 		private Expr Assignment()
@@ -218,6 +243,11 @@ namespace CSLox
 				{
 					Token name = ((Variable)expr).name;
 					return new Assign(name, value);
+				}
+				else if(expr is Get)
+				{
+					Get get = (Get)expr;
+					return new Set(get.obj, get.name, value);
 				}
 				Lox.Error(equals, "Invalid assignment target.");
 			}
@@ -326,6 +356,11 @@ namespace CSLox
 				{
 					expr = FinishCall(expr);
 				}
+				else if(Match(DOT))
+				{
+					Token name = Consume(IDENTIFIER, "Expected property name after '.'");
+					expr = new Get(expr, name);
+				}
 				else
 				{
 					break;
@@ -355,6 +390,7 @@ namespace CSLox
 			if(Match(TRUE)) return new Literal(true);
 			if(Match(NIL)) return new Literal(null);
 			if(Match(NUMBER, STRING)) return new Literal(Previous().literal);
+			if(Match(THIS)) return new This(Previous());
 			if(Match(IDENTIFIER)) return new Variable(Previous());
 			if(Match(LEFT_PAREN))
 			{
@@ -364,6 +400,36 @@ namespace CSLox
 			}
 			
 			throw Exception(Peek(), "Expect expression.");
+		}
+		
+		#endregion
+		
+		#region Private Members
+		
+		private Token Advance()
+		{
+			if(!isAtEnd) current++;
+			return Previous();
+		}
+		
+		private Token Consume(TokenType type, String message)
+		{
+			if(Check(type)) return Advance();
+			throw Exception(Peek(), message);
+		}
+		
+		private bool Check(TokenType type)
+		{
+			if(isAtEnd) return false;
+			return Peek().type == type;
+		}
+		
+		
+		
+		private ParseExecption Exception(Token token, string message)
+		{
+			Lox.Error(token, message);
+			return new ParseExecption();
 		}
 		
 		private bool Match(params TokenType[] types)
@@ -379,33 +445,9 @@ namespace CSLox
 			return false;
 		}
 		
-		private Token Consume(TokenType type, String message)
-		{
-			if(Check(type)) return Advance();
-			throw Exception(Peek(), message);
-		}
-		
-		private bool Check(TokenType type)
-		{
-			if(isAtEnd) return false;
-			return Peek().type == type;
-		}
-		
-		private Token Advance()
-		{
-			if(!isAtEnd) current++;
-			return Previous();
-		}
-		
 		private Token Peek() => tokens[current];
 		
 		private Token Previous() => tokens[current - 1];
-		
-		private ParseExecption Exception(Token token, string message)
-		{
-			Lox.Error(token, message);
-			return new ParseExecption();
-		}
 		
 		private void Synchronize()
 		{
@@ -431,6 +473,8 @@ namespace CSLox
 				Advance();
 			}
 		}
+		
+		#endregion
 	}
 	
 	internal class ParseExecption : Exception

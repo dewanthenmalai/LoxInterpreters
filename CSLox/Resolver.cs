@@ -2,22 +2,39 @@ using CSLox.Grammar;
 
 namespace CSLox
 {
-	internal class Resolver : ExprVisitor<object>, StmtVisitor<object>
+	internal class Resolver : ExprVisitor<object>, StmtVisitor<object> //C# doesn't permit T to be void, so we use object and just return null
 	{
+		#region Members
+		
 		private readonly Interpreter interpreter;
 		private readonly Stack<IDictionary<string, bool>> scopes = new Stack<IDictionary<string, bool>>();
 		private FunctionType currentFunction = FunctionType.NONE;
+		private ClassType currentClass = ClassType.NONE;
+		private enum FunctionType
+		{
+			NONE,
+			FUNCTION,
+			INITIALIZER,
+			METHOD
+		}
+		private enum ClassType
+		{
+			NONE,
+			CLASS
+		}
+		
+		#endregion
+		
+		#region Constructors
 		
 		internal Resolver(Interpreter interpreter)
 		{
 			this.interpreter = interpreter;
 		}
 		
-		private enum FunctionType
-		{
-			NONE,
-			FUNCTION
-		}
+		#endregion
+		
+		#region Internal Members
 		
 		internal void Resolve(List<Stmt> statments)
 		{
@@ -26,12 +43,35 @@ namespace CSLox
 				Resolve(statement);
 			}
 		}
+		
+		#endregion
+		
+		#region StmtVisitor<object>
 
 		public object Visit(Block stmt)
 		{
 			BeginScope();
 			Resolve(stmt.statments);
 			EndScope();
+			return null;
+		}
+		
+		public object Visit(Class stmt)
+		{
+			ClassType enclosingClass = currentClass;
+			currentClass = ClassType.CLASS;
+			Declare(stmt.name);
+			Define(stmt.name);
+			BeginScope();
+			scopes.Peek()["this"] = true;
+			foreach(Function method in stmt.methods)
+			{
+				FunctionType declaration = FunctionType.METHOD;
+				if(method.name.lexeme.Equals("init")) declaration = FunctionType.INITIALIZER;
+				ResolveFunction(method, declaration);
+			}
+			EndScope();
+			currentClass = enclosingClass;
 			return null;
 		}
 
@@ -66,7 +106,11 @@ namespace CSLox
 		public object Visit(Return stmt)
 		{
 			if(currentFunction == FunctionType.NONE) Lox.Error(stmt.keyword, "Cannot return from top level code.");
-			if(stmt.value != null) Resolve(stmt.value);
+			if(stmt.value != null)
+			{
+				if(currentFunction == FunctionType.INITIALIZER) Lox.Error(stmt.keyword, "Cannot return a value from a constructor.");
+				Resolve(stmt.value);
+			}
 			return null;
 		}
 
@@ -87,6 +131,10 @@ namespace CSLox
 			Resolve(stmt.body);
 			return null;
 		}
+		
+		#endregion
+		
+		#region ExprVisitor<object>
 
 		public object Visit(Assign expr)
 		{
@@ -111,6 +159,12 @@ namespace CSLox
 			}
 			return null;
 		}
+		
+		public object Visit(Get expr)
+		{
+			Resolve(expr.obj);
+			return null;
+		}
 
 		public object Visit(Grouping expr)
 		{
@@ -120,6 +174,19 @@ namespace CSLox
 
 		public object Visit(Literal expr)
 		{
+			return null;
+		}
+		
+		public object Visit(Set expr)
+		{
+			Resolve(expr.value);
+			Resolve(expr.obj);
+			return null;
+		}
+		
+		public object Visit(This expr)
+		{
+			ResolveLocal(expr, expr.keyword);
 			return null;
 		}
 
@@ -142,6 +209,10 @@ namespace CSLox
 			ResolveLocal(expr, expr.name);
 			return null;
 		}
+		
+		#endregion
+		
+		#region Private Methods
 		
 		private void Resolve(Stmt stmt)
 		{
@@ -203,5 +274,7 @@ namespace CSLox
 			EndScope();
 			currentFunction = enclosingFunction;
 		}
+		
+		#endregion
 	}
 }

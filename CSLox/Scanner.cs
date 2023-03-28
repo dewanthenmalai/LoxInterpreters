@@ -4,6 +4,8 @@ namespace CSLox
 {
 	internal class Scanner
 	{
+		#region Members
+		
 		private readonly string source;
 		private readonly List<Token> tokens = new List<Token>();
 		private int start = 0;
@@ -30,10 +32,18 @@ namespace CSLox
 			{"while", WHILE}
 		};
 		
+		#endregion
+		
+		#region Constructors
+		
 		internal Scanner(string source)
 		{
 			this.source = source;
 		}
+		
+		#endregion
+		
+		#region Token Scanning
 		
 		internal List<Token> ScanTokens()
 		{
@@ -89,47 +99,9 @@ namespace CSLox
 			}
 		}
 		
-		private void Default(char c)
-		{
-			if(IsDigit(c))
-			{
-				Number();
-			}
-			else if(IsAlpha(c))
-			{
-				Identifier();
-			}
-			else
-			{
-				Lox.Error(line, @$"Unexpected character '{c}'.");
-			}
-		}
+		#endregion
 		
-		private void Number()
-		{
-			while(IsDigit(Peek())) Advance();
-			//check decmial part
-			if(Peek() == '.' && IsDigit(PeekNext()))
-			{
-				Advance();
-				while(IsDigit(Peek())) Advance();
-			}
-			int length = current - start;
-			AddToken(NUMBER, Double.Parse(source.Substring(start, length)));
-		}
-		
-		private void Identifier()
-		{
-			while(IsAlphaNumeric(Peek())) Advance();
-			int length = current - start;
-			string text = source.Substring(start, length);
-			TokenType type = IDENTIFIER;
-			if(keywords.ContainsKey(text))
-			{
-				type = keywords[text];
-			}
-			AddToken(type);
-		}
+		#region Private Methods
 		
 		private char Advance()
 		{
@@ -148,20 +120,6 @@ namespace CSLox
 			tokens.Add(new Token(type, text, literal, line));
 		}
 		
-		private bool Match(char expected)
-		{
-			if(isAtEnd) return false;
-			if(source[current] != expected) return false;
-			current++;
-			return true;
-		}
-		
-		private char Peek()
-		{
-			if(isAtEnd) return '\0';
-			return source[current];
-		}
-		
 		private void CheckSlash()
 		{
 			if(Match('/'))
@@ -172,6 +130,83 @@ namespace CSLox
 			{
 				AddToken(SLASH);
 			}
+		}
+		
+		private void Default(char c)
+		{
+			if(IsDigit(c))
+			{
+				Number();
+			}
+			else if(IsAlpha(c))
+			{
+				Identifier();
+			}
+			else
+			{
+				Lox.Error(line, @$"Unexpected character '{c}'.");
+			}
+		}
+		
+		private void Identifier()
+		{
+			while(IsAlphaNumeric(Peek())) Advance();
+			int length = current - start;
+			string text = source.Substring(start, length);
+			TokenType type = IDENTIFIER;
+			if(keywords.ContainsKey(text))
+			{
+				type = keywords[text];
+			}
+			AddToken(type);
+		}
+		
+		private bool IsAlpha(char c)
+		{
+			return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+		}
+		
+		private bool IsAlphaNumeric(char c)
+		{
+			return IsAlpha(c) || IsDigit(c);
+		}
+		
+		private bool IsDigit(char c)
+		{
+			return (c >= '0' && c <= '9');
+		}
+		
+		private bool Match(char expected)
+		{
+			if(isAtEnd) return false;
+			if(source[current] != expected) return false;
+			current++;
+			return true;
+		}
+		
+		private void Number()
+		{
+			while(IsDigit(Peek())) Advance();
+			//check decmial part
+			if(Peek() == '.' && IsDigit(PeekNext()))
+			{
+				Advance();
+				while(IsDigit(Peek())) Advance();
+			}
+			int length = current - start;
+			AddToken(NUMBER, Double.Parse(source.Substring(start, length)));
+		}
+		
+		private char Peek()
+		{
+			if(isAtEnd) return '\0';
+			return source[current];
+		}
+		
+		private char PeekNext()
+		{
+			if(current + 1 >= source.Length) return '\0';
+			return source[current+1];
 		}
 		
 		private void String()
@@ -192,25 +227,6 @@ namespace CSLox
 			AddToken(STRING, value);
 		}
 		
-		private bool IsDigit(char c)
-		{
-			return (c >= '0' && c <= '9');
-		}
-		
-		private char PeekNext()
-		{
-			if(current + 1 >= source.Length) return '\0';
-			return source[current+1];
-		}
-		
-		private bool IsAlpha(char c)
-		{
-			return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
-		}
-		
-		private bool IsAlphaNumeric(char c)
-		{
-			return IsAlpha(c) || IsDigit(c);
-		}
+		#endregion
 	}
 }

@@ -9,6 +9,7 @@ namespace CSLox.Grammar
 	internal interface StmtVisitor<T>
 	{
 		T Visit(Block stmt);
+		T Visit(Class stmt);
 		T Visit(Expression stmt);
 		T Visit(Function stmt);
 		T Visit(If stmt);
@@ -25,6 +26,23 @@ namespace CSLox.Grammar
 		internal Block(List<Stmt> statments)
 		{
 			this.statments = statments;
+		}
+
+		public T Accept<T>(StmtVisitor<T> visitor)
+		{
+			return visitor.Visit(this);
+		}
+	}
+
+	internal class Class : Stmt
+	{
+		internal readonly Token name;
+		internal readonly List<Function> methods;
+
+		internal Class(Token name, List<Function> methods)
+		{
+			this.name = name;
+			this.methods = methods;
 		}
 
 		public T Accept<T>(StmtVisitor<T> visitor)

@@ -19,6 +19,11 @@ namespace CSLox
 		{
 			throw new NotImplementedException();
 		}
+		
+		public string Visit(Get expr)
+		{
+			throw new NotImplementedException();
+		}
 
 		public string Visit(Grouping expr)
 		{
@@ -34,6 +39,16 @@ namespace CSLox
 		public string Visit(Logical expr)
 		{
 			return Parenthesize(expr._operator.lexeme, expr.left, expr.right);
+		}
+		
+		public string Visit(Set expr)
+		{
+			throw new NotImplementedException();
+		}
+		
+		public string Visit(This expr)
+		{
+			throw new NotImplementedException();
 		}
 
 		public string Visit(Unary expr)
