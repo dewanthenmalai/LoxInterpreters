@@ -8,6 +8,7 @@ namespace CSLox
 		
 		internal readonly Environment globals = new Environment();
 		private Environment environment;
+		private readonly Dictionary<Expr, int> locals = new Dictionary<Expr, int>();
 		
 		internal Interpreter()
 		{
@@ -38,8 +39,15 @@ namespace CSLox
 		public object Visit(Assign expr)
 		{
 			object value = Evaluate(expr.value);
-			environment.Assign(expr.name, value);
-			return value;
+			if(locals.ContainsKey(expr))
+			{
+				environment.AssignAt(locals[expr], expr.name, value);
+			}
+			else
+			{
+				globals.Assign(expr.name, value);
+			}
+			return null;
 		}
 		
 		public object Visit(Binary expr)
@@ -129,7 +137,16 @@ namespace CSLox
 			return null;
 		}
 		
-		public object Visit(Variable stmt) => environment.Get(stmt.name);
+		public object Visit(Variable expr) => LookUpVariable(expr.name, expr);
+		
+		private object LookUpVariable(Token name, Expr expr)
+		{
+			if(locals.ContainsKey(expr))
+			{
+				return environment.GetAt(locals[expr], name.lexeme);
+			}
+			return globals.Get(name);
+		}
 		
 		public object Visit(Expression stmt)
 		{
@@ -244,6 +261,11 @@ namespace CSLox
 		private void Execute(Stmt stmt)
 		{
 			stmt.Accept(this);
+		}
+		
+		internal void Resolve(Expr expr, int depth)
+		{
+			locals[expr] = depth;
 		}
 
 		internal void ExecuteBlock(List<Stmt> statements, Environment environment)

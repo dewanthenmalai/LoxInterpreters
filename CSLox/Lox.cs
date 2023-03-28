@@ -55,6 +55,10 @@ namespace CSLox
 			//stop on syntax error
 			if(hadError) return;
 			
+			Resolver resolver = new Resolver(interpreter);
+			resolver.Resolve(statements);
+			if(hadError) return;
+			
 			if(statements.Count == 1 && statements[0] is Expression)
 			{
 				interpreter.Interpret(((Expression)statements[0]).expression);

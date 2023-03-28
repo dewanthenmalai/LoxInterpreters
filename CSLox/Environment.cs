@@ -20,6 +20,20 @@ namespace CSLox
 			values[name] = value;
 		}
 		
+		internal Environment Ancestor(int distance)
+		{
+			Environment environment = this;
+			for(int i = 0; i < distance; i++)
+			{
+				environment = environment.enclosing;
+			}
+			return environment;
+		}
+		
+		internal object GetAt(int distance, string name) => Ancestor(distance).values[name];
+		
+		internal void AssignAt(int distance, Token name, object value) => Ancestor(distance).values[name.lexeme] = value;
+		
 		internal object Get(Token name)
 		{
 			if(values.ContainsKey(name.lexeme)) return values[name.lexeme];
