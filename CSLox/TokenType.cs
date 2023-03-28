@@ -29,6 +29,7 @@ namespace CSLox
 		NUMBER,
 		//Keywords
 		AND,
+		BASE,
 		CLASS,
 		ELSE,
 		FALSE,
@@ -39,7 +40,6 @@ namespace CSLox
 		OR,
 		PRINT,
 		RETURN,
-		SUPER,
 		THIS,
 		TRUE,
 		VAR,

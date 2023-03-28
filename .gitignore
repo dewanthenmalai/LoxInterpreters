@@ -189,3 +189,6 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# Lox files used for testing
+*.lox
