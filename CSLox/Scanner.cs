@@ -68,7 +68,7 @@ namespace CSLox
 					case '=':
 						AddToken(Match('=') ? EQUAL_EQUAL : EQUAL); break;
 					case '<':
-						AddToken(Match('=') ? LESS_EQUAL : EQUAL); break;
+						AddToken(Match('=') ? LESS_EQUAL : LESS); break;
 					case '>':
 						AddToken(Match('=') ? GREATER_EQUAL : GREATER); break;
 					case '/':

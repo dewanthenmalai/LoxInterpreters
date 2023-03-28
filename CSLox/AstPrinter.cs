@@ -14,6 +14,11 @@ namespace CSLox
 		{
 			return Parenthesize(expr._operator.lexeme, expr.left, expr.right);
 		}
+		
+		public string Visit(Call expr)
+		{
+			throw new NotImplementedException();
+		}
 
 		public string Visit(Grouping expr)
 		{

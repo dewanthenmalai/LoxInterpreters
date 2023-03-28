@@ -10,6 +10,7 @@ namespace CSLox.Grammar
 	{
 		T Visit(Assign expr);
 		T Visit(Binary expr);
+		T Visit(Call expr);
 		T Visit(Grouping expr);
 		T Visit(Literal expr);
 		T Visit(Logical expr);
@@ -45,6 +46,25 @@ namespace CSLox.Grammar
 			this.left = left;
 			this._operator = _operator;
 			this.right = right;
+		}
+
+		public T Accept<T>(ExprVisitor<T> visitor)
+		{
+			return visitor.Visit(this);
+		}
+	}
+
+	internal class Call : Expr
+	{
+		internal readonly Expr callee;
+		internal readonly Token paren;
+		internal readonly List<Expr> arguments;
+
+		internal Call(Expr callee, Token paren, List<Expr> arguments)
+		{
+			this.callee = callee;
+			this.paren = paren;
+			this.arguments = arguments;
 		}
 
 		public T Accept<T>(ExprVisitor<T> visitor)

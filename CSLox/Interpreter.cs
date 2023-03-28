@@ -5,7 +5,16 @@ namespace CSLox
 {
 	internal class Interpreter : ExprVisitor<object>, StmtVisitor<object>
 	{
-		private Environment environment = new Environment();
+		
+		internal readonly Environment globals = new Environment();
+		private Environment environment;
+		
+		internal Interpreter()
+		{
+			environment = globals;
+			globals.Define("clock", new Clock());
+		}
+		
 		internal void Interpret(List<Stmt> statements)
 		{
 			try
@@ -69,6 +78,16 @@ namespace CSLox
 			}
 			return null;
 		}
+		
+		public object Visit(Call expr)
+		{
+			object callee = Evaluate(expr.callee);
+			List<object> arguments = expr.arguments.Select(e => Evaluate(e)).ToList();
+			if(!(callee is LoxCallable)) throw new LoxRuntimeException(expr.paren, "Only function and class names can be called.");
+			LoxCallable function = (LoxCallable)callee;
+			if(arguments.Count != function.Arity()) throw new LoxRuntimeException(expr.paren, $"Expected {function.Arity()} argument but received {arguments.Count}.");
+			return function.Call(this, arguments);
+		}
 
 		public object Visit(Grouping expr) => Evaluate(expr.expression);
 
@@ -118,13 +137,20 @@ namespace CSLox
 			return null;
 		}
 		
+		public object Visit(Function stmt)
+		{
+			LoxFunction function = new LoxFunction(stmt);
+			environment.Define(stmt.name.lexeme, function);
+			return null;
+		}
+		
 		public object Visit(If stmt)
 		{
 			if(IsTruthy(Evaluate(stmt.condition)))
 			{
 				Execute(stmt.thenBranch);
 			}
-			else
+			else if(stmt.elseBranch != null)
 			{
 				Execute(stmt.elseBranch);
 			}
@@ -136,6 +162,13 @@ namespace CSLox
 			object value = Evaluate(stmt.expression);
 			Console.WriteLine(Stringify(value));
 			return null;
+		}
+		
+		public object Visit(Return stmt)
+		{
+			object value = null;
+			if(stmt.value != null) value = Evaluate(stmt.value);
+			throw new ReturnException(value);
 		}
 		
 		public object Visit(Var stmt)
@@ -213,7 +246,7 @@ namespace CSLox
 			stmt.Accept(this);
 		}
 
-		private void ExecuteBlock(List<Stmt> statements, Environment environment)
+		internal void ExecuteBlock(List<Stmt> statements, Environment environment)
 		{
 			Environment previous = this.environment;
 			try
@@ -239,5 +272,15 @@ namespace CSLox
 		{
 			this.Token = token;
 		}
+	}
+
+	//C# doesn't permmit anonymous class definitions, so a concrete type must be created
+	internal class Clock : LoxCallable
+	{
+		public int Arity() => 0;
+
+		public object Call(Interpreter interpreter, List<object> arguments) => (DateTime.UtcNow - new DateTime(1970,1,1,0,0,0)).TotalSeconds / 1000.0;
+		
+		public override string ToString() => "<native function>";
 	}
 }

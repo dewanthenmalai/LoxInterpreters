@@ -11,6 +11,7 @@ namespace CSLox.Tools
 					  {
 						"Assign   : Token name, Expr value",
 					  	"Binary   : Expr left, Token _operator, Expr right",
+						"Call     : Expr callee, Token paren, List<Expr> arguments",
 						"Grouping : Expr expression",
 						"Literal  : object value",
 						"Logical  : Expr left, Token _operator, Expr right",
@@ -23,8 +24,10 @@ namespace CSLox.Tools
 					  {
 						"Block      : List<Stmt> statments",
 					  	"Expression : Expr expression",
+						"Function   : Token name, List<Token> parameters, List<Stmt> body",
 						"If         : Expr condition, Stmt thenBranch, Stmt elseBranch",
 						"Print      : Expr expression",
+						"Return     : Token keyword, Expr value",
 						"Var        : Token name, Expr initializer",
 						"While      : Expr condition, Stmt body"
 					  });

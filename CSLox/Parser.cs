@@ -42,6 +42,7 @@ namespace CSLox
 		{
 			try
 			{
+				if(Match(FUN)) return Function("function");
 				if(Match(VAR)) return VarDeclaration();
 				return Statement();
 			}
@@ -57,6 +58,7 @@ namespace CSLox
 			if(Match(FOR)) return ForStatement();
 			if(Match(IF)) return IfStatement();
 			if(Match(PRINT)) return PrintStatment();
+			if(Match(RETURN)) return ReturnStatment();
 			if(Match(WHILE)) return WhileStatement();
 			if(Match(LEFT_BRACE)) return new Block(Block());
 			return ExpressionStatment();
@@ -78,15 +80,19 @@ namespace CSLox
 			{
 				initializer = ExpressionStatment();
 			}
+			
 			Expr condition = null;
 			if(!Check(SEMICOLON))
 			{
 				condition = Expression();
 			}
 			Consume(SEMICOLON, "Expected ';' after loop condition");
+			
 			Expr increment = null;
 			if(!Check(RIGHT_PAREN)) increment = Expression();
+			
 			Consume(RIGHT_PAREN, "Unmatched '('");
+			
 			Stmt body = Statement();
 			if(increment != null) body = new Block(new List<Stmt>{ body, new Expression(increment) });
 			if(condition == null) condition = new Literal(true);
@@ -104,7 +110,7 @@ namespace CSLox
 			Stmt elseBranch = null;
 			if(Match(ELSE))
 			{
-				if(Peek().type == IF)
+				if(Check(IF))
 				{
 					Advance();
 					elseBranch = IfStatement();
@@ -122,6 +128,18 @@ namespace CSLox
 			Expr value = Expression();
 			Consume(SEMICOLON, "Expected ';' after print.");
 			return new Print(value);
+		}
+		
+		private Stmt ReturnStatment()
+		{
+			Token keyword = Previous();
+			Expr value = null;
+			if(!Check(SEMICOLON))
+			{
+				value = Expression();
+			}
+			Consume(SEMICOLON, "Expected ';' after return statement.");
+			return new Return(keyword, value);
 		}
 		
 		private Stmt VarDeclaration()
@@ -152,6 +170,29 @@ namespace CSLox
 			return new Expression(expr);
 		}
 		
+		private Function Function(string kind)
+		{
+			Token name = Consume(IDENTIFIER, $"Expected {kind} name.");
+			Consume(LEFT_PAREN, $"Expected '(' after {kind} name.");
+			List<Token> parameters = new List<Token>();
+			if(!Check(RIGHT_PAREN))
+			{
+				do
+				{
+					if(parameters.Count >= 255)
+					{
+						Lox.Error(Peek(), "Cannot use more than 255 arguemnts.");
+					}
+					parameters.Add(Consume(IDENTIFIER, "Expected parameter name."));
+				} while(Match(COMMA));
+			}
+			Consume(RIGHT_PAREN, "Unmatched '('");
+			
+			Consume(LEFT_BRACE, $"Expected '{{' before {kind} body.");
+			List<Stmt> body = Block();
+			return new Function(name, parameters, body);
+		}
+		
 		private List<Stmt> Block()
 		{
 			List<Stmt> statements = new List<Stmt>();
@@ -166,7 +207,7 @@ namespace CSLox
 		
 		private Expr Assignment()
 		{
-			Expr expr = Equality();
+			Expr expr = Or();
 			
 			if(Match(EQUAL))
 			{
@@ -273,7 +314,39 @@ namespace CSLox
 			}
 			if(Match(BANG_EQUAL, EQUAL_EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, PLUS, SLASH, STAR)) throw Exception(Previous(), "Missing left operand of binary operator");
 			
-			return Primary();
+			return Call();
+		}
+		
+		private Expr Call()
+		{
+			Expr expr = Primary();
+			while(true)
+			{
+				if(Match(LEFT_PAREN))
+				{
+					expr = FinishCall(expr);
+				}
+				else
+				{
+					break;
+				}
+			}
+			return expr;
+		}
+		
+		private Expr FinishCall(Expr callee)
+		{
+			List<Expr> arguments = new List<Expr>();
+			if(!Check(RIGHT_PAREN))
+			{
+				do
+				{
+					if(arguments.Count >= 255) Lox.Error(Peek(), "Cannot use more than 255 arguemnts.");
+					arguments.Add(Expression());
+				} while(Match(COMMA));
+			}
+			Token paren = Consume(RIGHT_PAREN, "Unmatched '('");
+			return new Call(callee, paren, arguments);
 		}
 		
 		private Expr Primary()

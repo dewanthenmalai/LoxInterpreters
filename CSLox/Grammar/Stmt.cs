@@ -10,8 +10,10 @@ namespace CSLox.Grammar
 	{
 		T Visit(Block stmt);
 		T Visit(Expression stmt);
+		T Visit(Function stmt);
 		T Visit(If stmt);
 		T Visit(Print stmt);
+		T Visit(Return stmt);
 		T Visit(Var stmt);
 		T Visit(While stmt);
 	}
@@ -46,6 +48,25 @@ namespace CSLox.Grammar
 		}
 	}
 
+	internal class Function : Stmt
+	{
+		internal readonly Token name;
+		internal readonly List<Token> parameters;
+		internal readonly List<Stmt> body;
+
+		internal Function(Token name, List<Token> parameters, List<Stmt> body)
+		{
+			this.name = name;
+			this.parameters = parameters;
+			this.body = body;
+		}
+
+		public T Accept<T>(StmtVisitor<T> visitor)
+		{
+			return visitor.Visit(this);
+		}
+	}
+
 	internal class If : Stmt
 	{
 		internal readonly Expr condition;
@@ -72,6 +93,23 @@ namespace CSLox.Grammar
 		internal Print(Expr expression)
 		{
 			this.expression = expression;
+		}
+
+		public T Accept<T>(StmtVisitor<T> visitor)
+		{
+			return visitor.Visit(this);
+		}
+	}
+
+	internal class Return : Stmt
+	{
+		internal readonly Token keyword;
+		internal readonly Expr value;
+
+		internal Return(Token keyword, Expr value)
+		{
+			this.keyword = keyword;
+			this.value = value;
 		}
 
 		public T Accept<T>(StmtVisitor<T> visitor)
