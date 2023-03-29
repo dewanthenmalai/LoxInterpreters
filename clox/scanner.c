@@ -18,11 +18,11 @@ void initScanner(const char* source) {
     scanner.line = 1;
 }
 
-static bool isAlpha(c) {
+static bool isAlpha(char c) {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
 }
 
-static bool isDigit(c) {
+static bool isDigit(char c) {
     return c >= '0' && c <= '9';
 }
 
@@ -112,6 +112,24 @@ static TokenType identifierType() {
     }
 }
 
+static Token makeToken(TokenType type) {
+    Token token;
+    token.type = type;
+    token.start = scanner.start;
+    token.length = (int)(scanner.current - scanner.start);
+    token.line = scanner.line;
+    return token;
+}
+
+static Token errorToken(const char* message) {
+    Token token;
+    token.type = TOKEN_ERROR;
+    token.start = scanner.start;
+    token.length = strlen(message);
+    token.line = scanner.line;
+    return token;
+}
+
 static Token identifier() {
     while(isAlpha(peek()) || isDigit(peek())) advance();
     return makeToken(identifierType());
@@ -146,24 +164,6 @@ static bool match(char expected) {
     if(*scanner.current != expected) return false;
     scanner.current++;
     return true;
-}
-
-static Token makeToken(TokenType type) {
-    Token token;
-    token.type = type;
-    token.start = scanner.start;
-    token.length = (int)(scanner.current - scanner.start);
-    token.line = scanner.line;
-    return token;
-}
-
-static Token errorToken(const char* message) {
-    Token token;
-    token.type = TOKEN_ERROR;
-    token.start = scanner.start;
-    token.length = strlen(message);
-    token.line = scanner.line;
-    return token;
 }
 
 Token scanToken() {
