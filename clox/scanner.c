@@ -59,7 +59,7 @@ static void skipWhitespace() {
                 break;
             case '/':
                 if(peekNext() == '/') {
-                    while(peek() != '\n' && !isAtEnd()) advance;
+                    while(peek() != '\n' && !isAtEnd()) advance();
                 }
                 else {
                     return;
@@ -110,6 +110,7 @@ static TokenType identifierType() {
         case 'v': return checkKeyword(1, 2, "ar", TOKEN_VAR);
         case 'w': return checkKeyword(1, 4, "hile", TOKEN_WHILE);
     }
+    return TOKEN_IDENTIFIER;
 }
 
 static Token makeToken(TokenType type) {
@@ -150,7 +151,7 @@ static Token number() {
 static Token string() {
     while(peek() != '"' && !isAtEnd()) {
         if(peek() == '\n') scanner.line++;
-        advance;
+        advance();
     }
 
     if(isAtEnd()) return errorToken("Unterminated string.");
