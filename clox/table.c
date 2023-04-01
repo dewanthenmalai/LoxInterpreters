@@ -122,7 +122,9 @@ ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t
             //Stop on empty non-tombstone
             if(IS_NIL(entry->value)) return NULL;
         }
-        else if(entry->key->length == length && entry->key->hash == hash && memcmp(entry->key->chars, chars, length) == 0) {
+        else if(entry->key->length == length &&
+                entry->key->hash == hash &&
+                memcmp(entry->key->chars, chars, length) == 0) {
             //We found it
             return entry->key;
         }
