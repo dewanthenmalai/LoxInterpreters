@@ -396,7 +396,7 @@ namespace CSLox
 	{
 		public int Arity() => 0;
 
-		public object Call(Interpreter interpreter, List<object> arguments) => (DateTime.UtcNow - new DateTime(1970,1,1,0,0,0)).TotalSeconds / 1000.0;
+		public object Call(Interpreter interpreter, List<object> arguments) => (DateTime.UtcNow - new DateTime(1970,1,1,0,0,0)).TotalSeconds;
 		
 		public override string ToString() => "<native function>";
 	}
