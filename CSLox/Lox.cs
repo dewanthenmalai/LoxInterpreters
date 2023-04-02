@@ -10,7 +10,6 @@ namespace CSLox
 		
 		public static void Main(string[] args)
 		{
-			//GenerateAst.DefineAst(@".\Grammar"); //hack to generate ASTs, since C# doesn't allow multiple Main methods
 			if(args.Length > 1)
 			{
 				Console.WriteLine("Usage: cslox [script]");
@@ -18,7 +17,8 @@ namespace CSLox
 			}
 			else if(args.Length == 1)
 			{
-				RunFile(args[0]);
+				if(args[0] == "GenerateAST") GenerateAst.DefineAst(@".\Grammar"); //hack to generate ASTs, since C# doesn't allow multiple Main methods
+				else RunFile(args[0]);
 			}
 			else
 			{
