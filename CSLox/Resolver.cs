@@ -223,7 +223,12 @@ namespace CSLox
 
 		public object Visit(Variable expr)
 		{
-			if(scopes.Count != 0 && !scopes.Peek()[expr.name.lexeme]) Lox.Error(expr.name, "Can't read local variable in its own initializer.");
+			if(scopes.Count != 0) 
+			{
+				bool defined;
+				bool exists = scopes.Peek().TryGetValue(expr.name.lexeme, out defined);
+				if(exists && !defined) Lox.Error(expr.name, "Can't read local variable in its own initializer.");
+			}
 			ResolveLocal(expr, expr.name);
 			return null;
 		}

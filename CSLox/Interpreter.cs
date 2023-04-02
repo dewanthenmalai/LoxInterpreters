@@ -59,7 +59,8 @@ namespace CSLox
 		
 		internal void Interpret(Expr expression)
 		{
-			Console.WriteLine(Evaluate(expression).ToString());
+			var result = Evaluate(expression);
+			if(result != null) Console.WriteLine(result.ToString());
 		}
 		
 		internal void Resolve(Expr expr, int depth)
@@ -86,6 +87,11 @@ namespace CSLox
 				if(!(baseclass is LoxClass)) throw new LoxRuntimeException(stmt.baseclass.name, "Base class must be a class.");
 			}
 			environment.Define(stmt.name.lexeme, null);
+			if(stmt.baseclass != null) 
+			{
+				environment = new Environment(environment);
+				environment.Define("base", baseclass);
+			}
 			Dictionary<string, LoxFunction> methods = new Dictionary<string, LoxFunction>();
 			foreach(Function method in stmt.methods)
 			{
