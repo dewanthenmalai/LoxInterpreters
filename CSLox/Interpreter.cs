@@ -98,12 +98,12 @@ namespace CSLox
 				LoxFunction function = new LoxFunction(method, environment, method.name.lexeme.Equals("init"));
 				methods[method.name.lexeme] = function;
 			}
-			LoxClass cls = new LoxClass(stmt.name.lexeme, (LoxClass)baseclass, methods);
+			LoxClass klass = new LoxClass(stmt.name.lexeme, (LoxClass)baseclass, methods);
 			if(baseclass != null)
 			{
 				environment = environment.enclosing;
 			}
-			environment.Assign(stmt.name, cls);
+			environment.Assign(stmt.name, klass);
 			return null;
 		}
 		
