@@ -82,7 +82,7 @@ static void blackenObject(Obj* object) {
         case OBJ_CLASS: {
             ObjClass* klass = (ObjClass*)object;
             markObject((Obj*)klass->name);
-            markObject(&klass->methods);
+            markTable(&klass->methods);
             break;
         }
         case OBJ_CLOSURE: {
@@ -189,6 +189,7 @@ static void markRoots() {
 
     markTable(&vm.globals);
     markCompilerRoots();
+    markObject((Obj*)vm.initString);
 }
 
 static void traceReferences() {
