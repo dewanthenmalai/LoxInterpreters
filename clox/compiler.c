@@ -73,6 +73,7 @@ typedef struct Compiler {
 
 typedef struct ClassCompiler {
     struct ClassCompiler* enclosing;
+    bool hasBaseClass;
 } ClassCompiler;
 
 Parser parser;
@@ -510,6 +511,38 @@ static void variable(bool canAssign) {
     namedVariable(parser.previous, canAssign);
 }
 
+static Token syntheticToken(const char* text) {
+    Token token;
+    token.start = text;
+    token.length = (int)strlen(text);
+    return token;
+}
+
+static void _base(bool canAssign) {
+    if(currentClass == NULL) {
+        error("Cannot use 'base' outside of a class.");
+    }
+    else if(!currentClass->hasBaseClass) {
+        error("Cannot use 'base' in a class that does not inherit.");
+    }
+
+    consume(TOKEN_DOT, "Expected '.' after 'base'.");
+    consume(TOKEN_IDENTIFIER, "Expected base class method name.");
+    uint8_t name = identifierConstant(&parser.previous);
+
+    namedVariable(syntheticToken("this"), false);
+    if(match(TOKEN_LEFT_PAREN)) {
+        uint8_t argCount = argumentList();
+        namedVariable(syntheticToken("base"), false);
+        emitBytes(OP_BASE_INVOKE, name);
+        emitByte(argCount);
+    }
+    else {
+        namedVariable(syntheticToken("base"), false);
+        emitBytes(OP_GET_BASE, name);
+    }
+}
+
 static void _this(bool canAssign) {
     if(currentClass == NULL) {
         error("Cannot use 'this' outside of a class definition.");
@@ -556,7 +589,7 @@ ParseRule rules[] = {
     [TOKEN_STRING]        = {string,   NULL,   PREC_NONE},
     [TOKEN_NUMBER]        = {number,   NULL,   PREC_NONE},
     [TOKEN_AND]           = {NULL,     and_,   PREC_AND},
-    [TOKEN_BASE]          = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_BASE]          = {_base,    NULL,   PREC_NONE},
     [TOKEN_CLASS]         = {NULL,     NULL,   PREC_NONE},
     [TOKEN_ELSE]          = {NULL,     NULL,   PREC_NONE},
     [TOKEN_FALSE]         = {literal,  NULL,   PREC_NONE},
@@ -666,8 +699,25 @@ static void classDeclaration() {
     defineVariable(nameConstant);
 
     ClassCompiler classCompiler;
+    classCompiler.hasBaseClass = false;
     classCompiler.enclosing = currentClass;
     currentClass = &classCompiler;
+
+    if(match(TOKEN_LESS)) {
+        consume(TOKEN_IDENTIFIER, "Expected base class name.");
+        variable(false);
+        if(identifiersEqual(&className, &parser.previous)) {
+            error("A class cannot inherit from itself");
+        }
+
+        beginScope();
+        addLocal(syntheticToken("base"));
+        defineVariable(0);
+
+        namedVariable(className, false);
+        emitByte(OP_INHERIT);
+        classCompiler.hasBaseClass = true;
+    }
 
     namedVariable(className, false);
     consume(TOKEN_LEFT_BRACE, "Expected '{' before class body.");
@@ -676,6 +726,10 @@ static void classDeclaration() {
     }
     consume(TOKEN_RIGHT_BRACE, "Unmatched '{'.");
     emitByte(OP_POP);
+
+    if(classCompiler.hasBaseClass) {
+        endScope();
+    }
 
     currentClass = currentClass->enclosing;
 }
