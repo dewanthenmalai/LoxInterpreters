@@ -184,9 +184,8 @@ namespace CSLox
 			Stmt elseBranch = null;
 			if(Match(ELSE))
 			{
-				if(Check(IF))
+				if(Match(IF))
 				{
-					Advance();
 					elseBranch = IfStatement();
 				}
 				else
