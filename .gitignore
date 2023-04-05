@@ -191,4 +191,5 @@ Mkfile.old
 dkms.conf
 
 # Lox files used for testing
+LoxTests/
 *.lox
