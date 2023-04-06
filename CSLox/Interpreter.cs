@@ -1,3 +1,4 @@
+using CSLox.ControlException;
 using CSLox.Grammar;
 using static CSLox.TokenType;
 
@@ -78,6 +79,11 @@ namespace CSLox
 			return null;
 		}
 		
+		public object Visit(Break stmt)
+		{
+			throw new BreakException();
+		}
+		
 		public object Visit(Class stmt)
 		{
 			object baseclass = null;
@@ -105,6 +111,11 @@ namespace CSLox
 			}
 			environment.Assign(stmt.name, klass);
 			return null;
+		}
+		
+		public object Visit(Continue stmt)
+		{
+			throw new ContinueException();
 		}
 		
 		public object Visit(Expression stmt)
@@ -159,7 +170,22 @@ namespace CSLox
 		{
 			while(IsTruthy(Evaluate(stmt.condition)))
 			{
-				Execute(stmt.body);
+				try
+				{
+					Execute(stmt.body);
+				}
+				catch(BreakException)
+				{
+					break;
+				}
+				catch(ContinueException)
+				{
+					if(stmt.increment != null)
+					{
+						Evaluate(stmt.increment);
+					}
+					continue;
+				}
 			}
 			return null;
 		}

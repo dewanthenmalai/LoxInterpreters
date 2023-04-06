@@ -27,14 +27,16 @@ namespace CSLox.Tools
 					  new List<string>
 					  {
 						"Block      : List<Stmt> statments",
+						"Break		: Token keyword",
 						"Class      : Token name, Variable baseclass, List<Function> methods",
+						"Continue	: Token keyword",
 					  	"Expression : Expr expression",
 						"Function   : Token name, List<Token> parameters, List<Stmt> body",
 						"If         : Expr condition, Stmt thenBranch, Stmt elseBranch",
 						"Print      : Expr expression",
 						"Return     : Token keyword, Expr value",
 						"Var        : Token name, Expr initializer",
-						"While      : Expr condition, Stmt body"
+						"While      : Expr condition, Stmt body, Expr increment"
 					  });
 		}
 		
