@@ -273,11 +273,11 @@ namespace CSLox
 		
 		private void ResolveLocal(Expr expr, Token name)
 		{
-			for(int i = scopes.Count - 1; i >= 0 ; i--)
+			for(int i = 0; i < scopes.Count ; i++) //C# stacks keep the most recent element at 0
 			{
 				if(scopes.ElementAt(i).ContainsKey(name.lexeme))
 				{
-					interpreter.Resolve(expr, scopes.Count - 1 - i);
+					interpreter.Resolve(expr, i);
 					return;
 				}
 			}
