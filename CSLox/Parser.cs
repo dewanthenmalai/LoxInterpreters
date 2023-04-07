@@ -10,6 +10,7 @@ namespace CSLox
 		private readonly List<Token> tokens;
 		private int current = 0;
 		private bool isAtEnd => Peek().type == EOF;
+		private int loopDepth;
 		
 		#endregion
 		
@@ -169,12 +170,25 @@ namespace CSLox
 			
 			Consume(RIGHT_PAREN, "Unmatched '('");
 			
-			Stmt body = Statement();
-			if(increment != null) body = new Block(new List<Stmt>{ body, new Expression(increment) });
-			if(condition == null) condition = new Literal(true);
-			body = new While(condition, body, increment);
-			if(initializer != null) body = new Block(new List<Stmt>{ initializer, body });
-			return body;
+			try
+			{
+				loopDepth++;
+				Stmt body = Statement();
+				Expression incrementExpression = null;
+				if(increment != null)
+				{
+					incrementExpression = new Expression(increment);
+					body = new Block(new List<Stmt>{ body, incrementExpression });
+				}
+				if(condition == null) condition = new Literal(true);
+				body = new While(condition, body, incrementExpression);
+				if(initializer != null) body = new Block(new List<Stmt>{ initializer, body });
+				return body;
+			}
+			finally
+			{
+				loopDepth--;
+			}
 		}
 		
 		private Stmt IfStatement()
@@ -208,6 +222,7 @@ namespace CSLox
 		private Stmt BreakStatement()
 		{
 			Token keyword = Previous();
+			if(loopDepth == 0) Lox.Error(keyword, "Must be in a loop to use 'break'.");
 			Consume(SEMICOLON, "Expected ';' after 'break'.");
 			return new Break(keyword);
 		}
@@ -238,8 +253,17 @@ namespace CSLox
 			Consume(LEFT_PAREN, "Expected'(' after 'while'.");
 			Expr condition = Expression();
 			Consume(RIGHT_PAREN, "Unmatched '('");
-			Stmt body = Statement();
-			return new While(condition, body, null);
+			try
+			{
+				loopDepth++;
+				Stmt body = Statement();
+				return new While(condition, body, null);
+			}
+			finally
+			{
+				loopDepth--;
+			}
+			
 		}
 		
 		#endregion
@@ -451,8 +475,6 @@ namespace CSLox
 			if(isAtEnd) return false;
 			return Peek().type == type;
 		}
-		
-		
 		
 		private ParseExecption Exception(Token token, string message)
 		{

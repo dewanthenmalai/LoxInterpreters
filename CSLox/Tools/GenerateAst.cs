@@ -26,7 +26,7 @@ namespace CSLox.Tools
 					  "Stmt",
 					  new List<string>
 					  {
-						"Block      : List<Stmt> statments",
+						"Block      : List<Stmt> statements",
 						"Break		: Token keyword",
 						"Class      : Token name, Variable baseclass, List<Function> methods",
 						"Continue	: Token keyword",
@@ -36,7 +36,7 @@ namespace CSLox.Tools
 						"Print      : Expr expression",
 						"Return     : Token keyword, Expr value",
 						"Var        : Token name, Expr initializer",
-						"While      : Expr condition, Stmt body, Expr increment"
+						"While      : Expr condition, Stmt body, Stmt increment"
 					  });
 		}
 		

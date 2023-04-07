@@ -75,7 +75,7 @@ namespace CSLox
 		
 		public object Visit(Block stmt)
 		{
-			ExecuteBlock(stmt.statments, new Environment(environment));
+			ExecuteBlock(stmt.statements, new Environment(environment));
 			return null;
 		}
 		
@@ -180,10 +180,12 @@ namespace CSLox
 				}
 				catch(ContinueException)
 				{
+					environment = new Environment(environment); //create new environment to properly resolve increment variable depth
 					if(stmt.increment != null)
 					{
-						Evaluate(stmt.increment);
+						Execute(stmt.increment);
 					}
+					environment = environment.enclosing;
 					continue;
 				}
 			}

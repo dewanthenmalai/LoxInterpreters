@@ -53,14 +53,14 @@ namespace CSLox
 		public object Visit(Block stmt)
 		{
 			BeginScope();
-			Resolve(stmt.statments);
+			Resolve(stmt.statements);
 			EndScope();
 			return null;
 		}
 		
 		public object Visit(Break stmt)
 		{
-			if(!inLoop) Lox.Error(stmt.keyword, "Cannot break outside a loop.");
+			if(!inLoop) Lox.Error(stmt.keyword, "Must be inside a loop to use 'break'.");
 			return null;
 		}
 		
@@ -94,7 +94,7 @@ namespace CSLox
 		
 		public object Visit(Continue stmt)
 		{
-			if(!inLoop) Lox.Error(stmt.keyword, "Cannot continue outside a loop.");
+			if(!inLoop) Lox.Error(stmt.keyword, "Must be inside a loop to use 'continue'.");
 			return null;
 		}
 

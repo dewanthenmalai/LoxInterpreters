@@ -23,11 +23,11 @@ namespace CSLox.Grammar
 
 	internal class Block : Stmt
 	{
-		internal readonly List<Stmt> statments;
+		internal readonly List<Stmt> statements;
 
-		internal Block(List<Stmt> statments)
+		internal Block(List<Stmt> statements)
 		{
-			this.statments = statments;
+			this.statements = statements;
 		}
 
 		public T Accept<T>(StmtVisitor<T> visitor)
@@ -191,9 +191,9 @@ namespace CSLox.Grammar
 	{
 		internal readonly Expr condition;
 		internal readonly Stmt body;
-		internal readonly Expr increment;
+		internal readonly Stmt increment;
 
-		internal While(Expr condition, Stmt body, Expr increment)
+		internal While(Expr condition, Stmt body, Stmt increment)
 		{
 			this.condition = condition;
 			this.body = body;
