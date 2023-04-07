@@ -30,7 +30,9 @@ namespace CSLox
 		//Keywords
 		AND,
 		BASE,
+		BREAK,
 		CLASS,
+		CONTINUE,
 		ELSE,
 		FALSE,
 		FUN,

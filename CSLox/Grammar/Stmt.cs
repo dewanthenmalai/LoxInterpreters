@@ -9,7 +9,9 @@ namespace CSLox.Grammar
 	internal interface StmtVisitor<T>
 	{
 		T Visit(Block stmt);
+		T Visit(Break stmt);
 		T Visit(Class stmt);
+		T Visit(Continue stmt);
 		T Visit(Expression stmt);
 		T Visit(Function stmt);
 		T Visit(If stmt);
@@ -21,11 +23,26 @@ namespace CSLox.Grammar
 
 	internal class Block : Stmt
 	{
-		internal readonly List<Stmt> statments;
+		internal readonly List<Stmt> statements;
 
-		internal Block(List<Stmt> statments)
+		internal Block(List<Stmt> statements)
 		{
-			this.statments = statments;
+			this.statements = statements;
+		}
+
+		public T Accept<T>(StmtVisitor<T> visitor)
+		{
+			return visitor.Visit(this);
+		}
+	}
+
+	internal class Break : Stmt
+	{
+		internal readonly Token keyword;
+
+		internal Break(Token keyword)
+		{
+			this.keyword = keyword;
 		}
 
 		public T Accept<T>(StmtVisitor<T> visitor)
@@ -45,6 +62,21 @@ namespace CSLox.Grammar
 			this.name = name;
 			this.baseclass = baseclass;
 			this.methods = methods;
+		}
+
+		public T Accept<T>(StmtVisitor<T> visitor)
+		{
+			return visitor.Visit(this);
+		}
+	}
+
+	internal class Continue : Stmt
+	{
+		internal readonly Token keyword;
+
+		internal Continue(Token keyword)
+		{
+			this.keyword = keyword;
 		}
 
 		public T Accept<T>(StmtVisitor<T> visitor)
@@ -159,11 +191,13 @@ namespace CSLox.Grammar
 	{
 		internal readonly Expr condition;
 		internal readonly Stmt body;
+		internal readonly Stmt increment;
 
-		internal While(Expr condition, Stmt body)
+		internal While(Expr condition, Stmt body, Stmt increment)
 		{
 			this.condition = condition;
 			this.body = body;
+			this.increment = increment;
 		}
 
 		public T Accept<T>(StmtVisitor<T> visitor)

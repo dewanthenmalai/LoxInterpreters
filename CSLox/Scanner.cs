@@ -16,7 +16,9 @@ namespace CSLox
 		{
 			{"and", AND},
 			{"base", BASE},
+			{"break", BREAK},
 			{"class", CLASS},
+			{"continue", CONTINUE},
 			{"else", ELSE},
 			{"false", FALSE},
 			{"for", FOR},

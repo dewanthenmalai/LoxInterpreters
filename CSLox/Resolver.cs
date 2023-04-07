@@ -10,6 +10,7 @@ namespace CSLox
 		private readonly Stack<IDictionary<string, bool>> scopes = new Stack<IDictionary<string, bool>>();
 		private FunctionType currentFunction = FunctionType.NONE;
 		private ClassType currentClass = ClassType.NONE;
+		private bool inLoop = false;
 		private enum FunctionType
 		{
 			NONE,
@@ -52,8 +53,14 @@ namespace CSLox
 		public object Visit(Block stmt)
 		{
 			BeginScope();
-			Resolve(stmt.statments);
+			Resolve(stmt.statements);
 			EndScope();
+			return null;
+		}
+		
+		public object Visit(Break stmt)
+		{
+			if(!inLoop) Lox.Error(stmt.keyword, "Must be inside a loop to use 'break'.");
 			return null;
 		}
 		
@@ -82,6 +89,12 @@ namespace CSLox
 			EndScope();
 			if(stmt.baseclass != null) EndScope();
 			currentClass = enclosingClass;
+			return null;
+		}
+		
+		public object Visit(Continue stmt)
+		{
+			if(!inLoop) Lox.Error(stmt.keyword, "Must be inside a loop to use 'continue'.");
 			return null;
 		}
 
@@ -138,7 +151,9 @@ namespace CSLox
 		public object Visit(While stmt)
 		{
 			Resolve(stmt.condition);
+			inLoop = true;
 			Resolve(stmt.body);
+			inLoop = false;
 			return null;
 		}
 		

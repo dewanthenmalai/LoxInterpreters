@@ -4,6 +4,7 @@
 
 #include "common.h"
 #include "compiler.h"
+#include "integer.h"
 #include "memory.h"
 #include "scanner.h"
 
@@ -31,8 +32,6 @@ typedef enum {
   PREC_CALL,        // . ()
   PREC_PRIMARY
 } Precedence;
-
-
 
 typedef void (*ParseFn)(bool canAssign);
 
@@ -79,6 +78,9 @@ typedef struct ClassCompiler {
 Parser parser;
 Compiler* current = NULL;
 ClassCompiler* currentClass = NULL;
+IntegerArray* innermostLoopBreaks;
+int innermostLoopStart = -1;
+int innermostLoopScopeDepth = 0;
 
 static Chunk* currentChunk() {
     return &current->function->chunk;
@@ -202,7 +204,7 @@ static void patchJump(int offset) {
     currentChunk()->code[offset + 1] = jump & 0xff;
 }
 
-static void initCompiler (Compiler* compiler, FunctionType type) {
+static void initCompiler(Compiler* compiler, FunctionType type) {
     compiler->enclosing = current;
     compiler->function = NULL;
     compiler->type = type;
@@ -225,6 +227,9 @@ static void initCompiler (Compiler* compiler, FunctionType type) {
         local->name.start = "";
         local->name.length = 0;
     }
+
+    innermostLoopBreaks = ALLOCATE(IntegerArray, 8);
+    initIntegerArray(innermostLoopBreaks);
 }
 
 static ObjFunction* endCompiler() {
@@ -237,6 +242,7 @@ static ObjFunction* endCompiler() {
     }
 #endif
 
+    freeIntegerArray(innermostLoopBreaks);
     current = current->enclosing;
     return function;
 }
@@ -761,6 +767,39 @@ static void expressionStatement() {
     emitByte(OP_POP);
 }
 
+static void breakStatement() {
+    if(innermostLoopStart == -1) {
+        error("Must be in a loop to use 'break'.");
+    }
+
+    consume(TOKEN_SEMICOLON, "Expected ';' after 'break'.");
+    
+    for(int i = current->localCount;
+        i >= 0 && current->locals[i].depth > innermostLoopScopeDepth;
+        i--) {
+            emitByte(OP_POP);
+        }
+    
+    int breakJump = emitJump(OP_JUMP);
+    writeIntegerArray(innermostLoopBreaks, breakJump);
+}
+
+static void continueStatement() {
+    if(innermostLoopStart == -1) {
+        error("Must be in a loop to use 'continue'.");
+    }
+
+    consume(TOKEN_SEMICOLON, "Expected ';' after 'continue'.");
+
+    for(int i = current->localCount;
+        i >= 0 && current->locals[i].depth > innermostLoopScopeDepth;
+        i--) {
+            emitByte(OP_POP);
+        }
+    
+    emitLoop(innermostLoopStart);
+}
+
 static void forStatement() {
     beginScope();
     consume(TOKEN_LEFT_PAREN, "Expected '(' after 'for'.");
@@ -772,7 +811,15 @@ static void forStatement() {
         expressionStatement();
     }
 
-    int loopStart = currentChunk()->count;
+    int surroundingLoopStart = innermostLoopStart;
+    int surroundingLoopScopeDepth = innermostLoopScopeDepth;
+    IntegerArray* surroundingLoopBreaks = innermostLoopBreaks;
+
+    innermostLoopStart = currentChunk()->count;
+    innermostLoopScopeDepth = current->scopeDepth;
+    innermostLoopBreaks = ALLOCATE(IntegerArray, 8);
+    initIntegerArray(innermostLoopBreaks);
+
     int exitJump = -1;
     if(!match(TOKEN_SEMICOLON)) {
         expression();
@@ -790,19 +837,27 @@ static void forStatement() {
         emitByte(OP_POP);
         consume(TOKEN_RIGHT_PAREN, "Unmatched '('.");
 
-        emitLoop(loopStart);
-        loopStart = incrementStart;
+        emitLoop(innermostLoopStart);
+        innermostLoopStart = incrementStart;
         patchJump(bodyJump);
     }
 
     statement();
-    emitLoop(loopStart);
+    emitLoop(innermostLoopStart);
 
     if(exitJump != -1) {
         patchJump(exitJump);
         emitByte(OP_POP);
     }
 
+    for(int i = 0; i < innermostLoopBreaks->count; i++) {
+        patchJump(innermostLoopBreaks->values[i]);
+    }
+
+    freeIntegerArray(innermostLoopBreaks);
+    innermostLoopBreaks = surroundingLoopBreaks;
+    innermostLoopStart = surroundingLoopStart;
+    innermostLoopScopeDepth = surroundingLoopScopeDepth;
     endScope();
 }
 
@@ -855,7 +910,15 @@ static void returnStatement() {
 }
 
 static void whileStatement() {
-    int loopStart = currentChunk()->count;
+    int surroundingLoopStart = innermostLoopStart;
+    int surroundingLoopScopeDepth = innermostLoopScopeDepth;
+    IntegerArray* surroundingLoopBreaks = innermostLoopBreaks;
+
+    innermostLoopStart = currentChunk()->count;
+    innermostLoopScopeDepth = current->scopeDepth;
+    innermostLoopBreaks = ALLOCATE(IntegerArray, 8);
+    initIntegerArray(innermostLoopBreaks);
+
     consume(TOKEN_LEFT_PAREN, "Expected '(' after 'while'.");
     expression();
     consume(TOKEN_RIGHT_PAREN, "Unmatched '('.");
@@ -863,10 +926,19 @@ static void whileStatement() {
     int exitJump = emitJump(OP_JUMP_IF_FALSE);
     emitByte(OP_POP);
     statement();
-    emitLoop(loopStart);
+    emitLoop(innermostLoopStart);
+
+    for(int i = 0; i < innermostLoopBreaks->count; i++) {
+        patchJump(innermostLoopBreaks->values[i]);
+    }
 
     patchJump(exitJump);
     emitByte(OP_POP);
+
+    freeIntegerArray(innermostLoopBreaks);
+    innermostLoopBreaks = surroundingLoopBreaks;
+    innermostLoopStart = surroundingLoopStart;
+    innermostLoopScopeDepth = surroundingLoopScopeDepth;
 }
 
 static void synchronize() {
@@ -912,6 +984,12 @@ static void declaration() {
 static void statement() {
     if(match(TOKEN_PRINT)) {
         printStatement();
+    }
+    else if(match(TOKEN_BREAK)) {
+        breakStatement();
+    }
+    else if(match(TOKEN_CONTINUE)) {
+        continueStatement();
     }
     else if (match(TOKEN_FOR)) {
         forStatement();
